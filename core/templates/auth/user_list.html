@@ -1,0 +1,77 @@
+{% extends 'menu.html' %}
+
+{% load static %}
+
+{% block title %}Gestión de Usuarios - SCG POS{% endblock title %}
+
+{%block content%}
+
+<div class="container">
+  <p class="fs-2">Usuarios</p>
+</div>
+
+<div class="container">
+  <div class="row g-0">
+    <div class="col-1"></div>
+    <div class="col-2 mt-3">
+      <button type="button" id="boton-crear-usuario" class="btn"
+        style="background-color: #467012; color:white; cursor: pointer; border-radius: 4px;">Crear Usuario</button>
+    </div>
+
+    <div class="col-4 mt-3 ">
+      <input type="input" class="form-control" id="buscar-usuario-nombre"
+        placeholder="Buscar por usuario"
+        style="border-radius: 4px;">
+    </div>
+
+    <div class="col mt-3">
+      <button id="buscar-usuario-btn" type="button" class="btn" style="
+    background-color: #467012; color:white; cursor: pointer; border-radius: 4px;
+    ">Buscar</button>
+    </div>
+
+<div id="lista-usuarios-div" class="container-fluid vh-100 overflow-auto mt-2"
+  >
+  <div class="row">
+    <div class="col">
+      <div class="container">
+        <table class="table table-hover table-bordered table-striped" style="background-color:white;">
+          <thead>
+            <tr>
+              <th scope="col">id</th>
+              <th scope="col">Nombre de Usuario</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Apellido</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Grupo</th>
+              <th scope="col">Modificar</th>
+              <th scope="col">Eliminar</th>
+            </tr>
+          </thead>
+          <tbody id="">
+            {% for user in user_list %}
+            <tr>
+                <th>{{user.pk}}</th>
+                <td>{{user.username}}</td>
+                <td>{{user.first_name}}</td>
+                <td>{{user.last_name}}</td>
+                <td>{{user.date_joined}}</td>
+                <td>    {% for group in user.groups.all %}
+                            <p>{{ group.name }}</p>
+                        {% empty %}
+                            Sin grupo
+                        {% endfor %}
+                </td>
+                <td><a href="edit/{{user.pk}}">Modificar</a></td>
+                <td><form method="post" action="delete/{{user.pk}}"><input type="submit" value="Eliminar"></form></td>
+
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<p id="crear-usuario-url" class="invisible">{% url 'pos:user-create' %}</p>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-tags me-2"></i>Gestión de Categorías
+                        </h4>
+                        <button type="button" id="boton-crear-categoria" class="btn btn-light">
+                            <i class="fas fa-plus me-1"></i>Nueva Categoría
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if categorias_list %}
+                        <div class="row g-3">
+                            {% for categoria in categorias_list %}
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                                <div class="card h-100 shadow-sm border-0 categoria-card">
+                                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 150px;">
+                                        {% if categoria.imagen %}
+                                            <img src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}" class="img-fluid rounded" style="max-height: 130px; max-width: 100%; object-fit: cover;">
+                                        {% else %}
+                                            <div class="text-muted text-center">
+                                                <i class="fas fa-image fa-3x mb-2"></i>
+                                                <p class="mb-0 small">Sin imagen</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="mb-2">
+                                            <h6 class="card-title fw-bold mb-1">{{ categoria.nombre }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-hashtag me-1"></i>ID: {{ categoria.pk }}
+                                                <span class="ms-2">
+                                                    <i class="fas fa-sort-numeric-up me-1"></i>Orden: {{ categoria.orden|default:"N/A" }}
+                                                </span>
+                                            </small>
+                                        </div>
+                                        <div class="mt-auto">
+                                            <div class="btn-group w-100" role="group">
+                                                <a href="edit/{{ categoria.pk }}" class="btn btn-outline-primary btn-sm" title="Editar categoría">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="cambiar-precios/{{ categoria.pk }}" class="btn btn-outline-warning btn-sm" title="Cambiar precios">
+                                                    <i class="fas fa-dollar-sign"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" title="Eliminar categoría" onclick="confirmarEliminacion({{ categoria.pk }}, '{{ categoria.nombre }}')">                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-tags fa-4x mb-3"></i>
+                                <h5>No hay categorías registradas</h5>
+                                <p class="mb-3">Comienza creando tu primera categoría para organizar tus productos.</p>
+                                <button type="button" id="boton-crear-categoria-empty" class="btn btn-primary">
+                                    <i class="fas fa-plus me-1"></i>Crear Primera Categoría
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalEliminarLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar la categoría <strong id="nombreCategoria"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Advertencia:</strong> Esta acción no se puede deshacer y podría afectar los productos asociados a esta categoría.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <form id="formEliminar" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Eliminar Categoría
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p id="crear-categoria-url" class="d-none">{% url 'pos:crear-categoria' %}</p>
+
+<style>
+.categoria-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.categoria-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.btn-group .btn {
+    flex: 1;
+}
+</style>
+
+<script>
+// Función para confirmar eliminación
+function confirmarEliminacion(categoriaId, categoriaNombre) {
+    document.getElementById('nombreCategoria').textContent = categoriaNombre;
+    document.getElementById('formEliminar').action = 'delete/' + categoriaId;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+    modal.show();
+}
+
+// Event listeners para botones de crear categoría
+document.addEventListener('DOMContentLoaded', function() {
+    const crearCategoriaUrl = document.getElementById('crear-categoria-url').textContent;
+    
+    // Botón principal
+    const botonCrear = document.getElementById('boton-crear-categoria');
+    if (botonCrear) {
+        botonCrear.addEventListener('click', function() {
+            window.location.href = crearCategoriaUrl;
+        });
+    }
+    
+    // Botón cuando no hay categorías
+    const botonCrearEmpty = document.getElementById('boton-crear-categoria-empty');
+    if (botonCrearEmpty) {
+        botonCrearEmpty.addEventListener('click', function() {
+            window.location.href = crearCategoriaUrl;
+        });
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% for pedido in pedidos_list %}
+<tr class="{% if pedido.status == 'Por pagar' %}pedido-por-pagar{% elif pedido.status == 'Pagado' %}pedido-pagado{% elif pedido.status == 'Pagado con Crédito' %}pedido-pagado-credito{% elif pedido.status == 'Devolución' %}pedido-devolucion{% elif pedido.status == 'Cancelado' %}pedido-cancelado{% elif pedido.status == 'Injustificado' %}pedido-injustificado{% elif pedido.status == 'Entregado' %}pedido-entregado{% elif pedido.status == 'Despachado' %}pedido-despachado{% elif pedido.status == 'Procesando' %}pedido-procesando{% endif %}">
+  <th>{{pedido.pk}}</th>
+  <td>{{pedido.fecha|date:"d/m/Y H:i"}}</td>
+  <td>
+    {% if pedido.cliente == 0 %}
+      Cliente General
+    {% else %}
+      {% with cliente_nombre=None %}
+        {% for cliente in clientes %}
+          {% if cliente.id == pedido.cliente and not cliente_nombre %}
+            {{ cliente.nombre }}
+            {% with cliente_nombre=cliente.nombre %}{% endwith %}
+          {% endif %}
+        {% endfor %}
+      {% endwith %}
+    {% endif %}
+  </td>
+  <td>${{pedido.precio_total|floatformat:2}}</td>
+  <td>{{pedido.pagado_fecha|date:"d/m/Y H:i"}}</td>
+  <td>{{pedido.status}}</td>
+  <td>{{pedido.usuario}}</td>
+  <td>{{pedido.pesador}}</td>
+  <td>
+    <a href="{% url 'pos:posPedido' pedido.pk %}" class="btn btn-primary btn-sm">Ver</a>
+  </td>
+  <td>
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="dropdownAcciones{{pedido.pk}}" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-cog"></i> Acciones
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="dropdownAcciones{{pedido.pk}}">
+        {% if pedido.status == "Por pagar" %}
+          <li>
+            <button class="dropdown-item btn-marcar-devolucion" data-pedido-id="{{pedido.pk}}">
+              <i class="fas fa-undo text-warning"></i> Devolución
+            </button>
+          </li>
+        {% endif %}
+        {% if pedido.status != "Injustificado" and pedido.status != "Cancelado" %}
+          <li>
+            <button class="dropdown-item btn-marcar-injustificado" data-pedido-id="{{pedido.pk}}">
+              <i class="fas fa-question-circle text-secondary"></i> Injustificado
+            </button>
+          </li>
+        {% endif %}
+        {% if pedido.status != "Cancelado" %}
+          <li>
+            <button class="dropdown-item btn-cancelar-pedido" data-pedido-id="{{pedido.pk}}">
+              <i class="fas fa-times-circle text-danger"></i> Cancelar
+            </button>
+          </li>
+        {% endif %}
+        {% if pedido.status == "Cancelado" %}
+          <li><span class="dropdown-item-text text-muted">No hay acciones disponibles</span></li>
+        {% endif %}
+      </ul>
+    </div>
+  </td>
+</tr>
+{% empty %}
+<tr>
+  <td colspan="10" class="text-center">No se encontraron pedidos con los filtros seleccionados.</td>
+</tr>
+{% endfor %} 

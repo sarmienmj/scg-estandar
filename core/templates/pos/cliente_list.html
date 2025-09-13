@@ -1,0 +1,71 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+<div class="container">
+  <p class="fs-2">Clientes</p>
+</div>
+
+<div class="container">
+  <div class="row g-0">
+    <div class="col-3 mt-3">
+      <button type="button" id="boton-crear-cliente" class="btn"
+        style="background-color: #467012; color:white; cursor: pointer; border-radius: 4px;">Crear Cliente</button>
+    </div>
+    <div class="col-4 mt-3 ">
+        <input type="input" class="form-control" id="buscar-cliente-menu"
+          placeholder="Buscar por Cedula"
+          style="border-radius: 4px;">
+      </div>
+  
+      <div class="col mt-3">
+        <button id="buscar-cliente-btn" type="button" class="btn" style="
+      background-color: #467012; color:white; cursor: pointer; border-radius: 4px;
+      ">Buscar</button>
+      </div>
+
+</div>
+
+<div id="lista-cliente-div" class="container-fluid vh-100 overflow-auto mt-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="container">
+        <table class="table table-hover table-bordered table-striped"
+          style="background-color:white;">
+          <thead>
+            <tr>
+              <th scope="col">#id</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Cedula</th>
+              <th scope="col">Telefono</th>
+              <th scope="col">Zona</th>
+              <th scope="col">Credito Total</th>
+              <th scope="col">Credito Restante</th>
+              <th scope="col">Credito Plazo</th>
+              <th scope="col">Modificar</th>
+              <th scope="col">Eliminar</th>
+            </tr>
+          </thead>
+          <tbody id="clientes-tabla">
+            {% for cliente in cliente %}
+            <tr>
+              <th>{{cliente.pk}}</th>
+              <td>{{cliente.nombre}}</td>
+              <td>{{cliente.cedula}}</td>
+              <td>{{cliente.telefono}}</td>
+              <td>{{cliente.zona_vive}}</td>
+              <td>{{cliente.credito_maximo}} $</td>
+              <td>{{cliente.credito}}</td>
+              <td>{{cliente.credito_plazo}}</td>
+              <td><a href="edit/{{cliente.pk}}">Modificar</a></td>
+              <td><form method="post" action="delete/{{cliente.pk}}"><input type="submit" value="Eliminar"></form></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<p id="crear-cliente-url" class="invisible">{% url 'pos:crear-cliente' %}</p>
+{% endblock %}

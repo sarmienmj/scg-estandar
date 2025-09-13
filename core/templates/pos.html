@@ -1,0 +1,982 @@
+{% extends 'pos_base.html' %}
+{% load static %}
+
+{% block title %}SCG POS - Punto de Venta{% endblock title %}
+
+{% block content %}
+
+<nav class="navbar navbar-expand-lg navbar-light"
+  style="background-color: #527821;">
+  <div class="container-fluid">
+
+    <a class="navbar-brand" href="#">
+      <img src="/media/logo.png" alt="Bootstrap" width="70">
+    </a>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-5 me-auto mb-2 mb-lg-0">
+        <li id="boton-listar-pedidos" class="nav-item ms-5"
+          style="background-color: #467012; padding: 10px; cursor: pointer; border-radius: 4px;">
+          <span class="navbar-text" style="color:white; ">Pedidos</span>
+        </li>
+        <li id="boton-cliente" class="nav-item ms-5"
+          style="background-color: #467012; padding: 10px; cursor: pointer; border-radius: 4px;">
+          <span class="navbar-text" style="color:white; ">Cliente</span>
+        </li>
+        
+        <li id="reloj" class="nav-item ms-5"
+          style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+          <span id="reloj-span" class="navbar-text" style="color:white">hh:mm:ss</span>
+        </li>
+        
+        {% if user.is_authenticated %}
+        <li class="nav-item ms-5"
+          style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+          <span class="navbar-text" style="color:white">Usuario: {{user.get_username}}</span>
+        </li>
+        {% if not user.groups.all|join:"," == 'PESADOR' %}
+        <li id="boton-estado-caja" class="nav-item ms-5"
+          style="background-color: #dc3545; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+          <span class="navbar-text" style="color:white">Caja: <span id="estado-caja-texto">CERRADA</span></span>
+        </li>
+        {% endif %}
+        <!-- Botón de Balanza para Modo Etiqueta -->
+        <li id="boton-balanza-rapida" class="nav-item ms-5" 
+          style="background-color: #20c997; padding: 10px; cursor: pointer; border-radius: 4px; display: none;">
+          <span class="navbar-text" style="color:white;">
+            <i class="fas fa-weight-hanging"></i> <span id="balanza-rapida-texto">Seleccione Balanza</span>
+          </span>
+        </li>
+        {% endif %}
+        {% if pedido_id %}
+        <li  class="nav-item ms-5 "
+          style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px; border: 1px solid white;">
+          <span  class="navbar-text boton-reimprimir" style="color:white">Reimprimir #{{pedido_id}}</span>
+        </li>
+        {% endif %}
+      </ul>
+      <a id="volver-home" class="nav-link p-2"
+  style="background-color: #467012; color: white; cursor: pointer; border-radius: 4px;">Cerrar</a>
+    </div>
+  </div>
+</nav>
+
+<div id="loading-div" class="centro text-center" style="display: none;">
+  <button class="btn btn-success" type="button" disabled>
+    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+    <span role="status">Cargando Pedido...</span>
+  </button>
+</div>
+<div id="error-div" class="centro text-center" style="display: none;">
+  <p id="errorImprimirText" class="fs-4 fw-bold text-center">Error de Impresion</p>
+  <br>
+  <button  class="btn btn-danger boton-reimprimir" type="button" >Reintentar Impresion</button>
+</div>
+<div id="producto-cero-div" class="centro text-center" style="display: none;">
+    <p class=" fs-4 fw-bold text-center ">Producto sin pesar:</p>
+    <p id="producto-cero" class=" fs-5 text-center "></p>
+    <button class="btn btn-danger" style="margin-top: -27px; margin-left: 350px;" id="boton-producto-cero">Pesar</button>
+</div>
+
+<!-- Modal Pedido Pagado -->
+{% if pedido_pagado %}
+<div class="modal fade" id="pedidoPagadoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="pedidoPagadoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #d1ecf1;">
+        <h5 class="modal-title" id="pedidoPagadoModalLabel">Pedido Pagado #{{ pedido_id }}</h5>
+      </div>
+      <div class="modal-body">
+        <p><strong>Cliente:</strong> {{ cliente_nombre }}</p>
+        <p><strong>Fecha Pago:</strong> {{ pedido.pagado_fecha|date:"d/m/Y H:i" }}</p>
+        <p><strong>Tasa Dólar al Pagar:</strong> {{ dolar|floatformat:2 }} Bs.F</p>
+        <hr>
+        <h6>Productos:</h6>
+        <ul class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+          {% for producto in productos_pedido %}
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <div>
+                <h6 class="my-0">{{ producto.producto_nombre }}</h6>
+                <small class="text-muted">{{ producto.cantidad }} {{ producto.unidad }} @ {{ producto.precio_unitario_display }} {{ producto.moneda }}/{{ producto.unidad }}</small>
+              </div>
+              <span class="text-muted">${{ producto.precio_total_usd_display }} / {{ producto.precio_total_bs_display }} Bs.F</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <hr>
+        <h5>Total: ${{ precio_total|floatformat:2 }} = {{ precio_total_bs_display }} Bs.F</h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success nuevo-pedido">Nuevo Pedido</button>
+        <button type="button" class="btn btn-primary boton-reimprimir">Reimprimir Ticket</button>
+        <button type="button" class="btn btn-secondary" id="btn-volver-pedido-pagado">Volver</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal Pedido Devolución -->
+{% if pedido_devolucion %}
+<div class="modal fade" id="pedidoDevolucionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="pedidoDevolucionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #fff3cd;">
+        <h5 class="modal-title" id="pedidoDevolucionModalLabel">
+          <i class="fas fa-exclamation-triangle text-warning"></i> 
+          Pedido Devolución #{{ pedido_id }}
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>¡ATENCIÓN!</strong> Este pedido fue marcado como <strong>DEVOLUCIÓN</strong>.
+          <br>No puede ser modificado ni procesado para pago.
+        </div>
+        
+        <p><strong>Cliente:</strong> {{ cliente_nombre }}</p>
+        <p><strong>Fecha Creación:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+        <p><strong>Estado:</strong> <span class="badge bg-warning text-dark">{{ pedido.status }}</span></p>
+        <hr>
+        <h6>Productos:</h6>
+        <ul class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+          {% for producto in productos_pedido %}
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <div>
+                <h6 class="my-0">{{ producto.producto_nombre }}</h6>
+                <small class="text-muted">{{ producto.cantidad }} {{ producto.unidad }} @ {{ producto.precio }} {{ producto.moneda }}/{{ producto.unidad }}</small>
+              </div>
+              <span class="text-muted">${{ producto.precio_total_usd|floatformat:2 }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <hr>
+        <h5>Total: ${{ precio_total|floatformat:2 }}</h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success nuevo-pedido">Nuevo Pedido</button>
+        <button type="button" class="btn btn-secondary" id="btn-volver-pedido-devolucion">Volver</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal Pedido Cancelado -->
+{% if pedido_cancelado %}
+<div class="modal fade" id="pedidoCanceladoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="pedidoCanceladoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #f8d7da;">
+        <h5 class="modal-title" id="pedidoCanceladoModalLabel">
+          <i class="fas fa-times-circle text-danger"></i> 
+          Pedido Cancelado #{{ pedido_id }}
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <strong>¡ATENCIÓN!</strong> Este pedido fue <strong>CANCELADO</strong>.
+          <br>No puede ser modificado ni procesado.
+        </div>
+        
+        <p><strong>Cliente:</strong> {{ cliente_nombre }}</p>
+        <p><strong>Fecha Creación:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+        <p><strong>Estado:</strong> <span class="badge bg-danger">{{ pedido.status }}</span></p>
+        <hr>
+        <h6>Productos:</h6>
+        <ul class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+          {% for producto in productos_pedido %}
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <div>
+                <h6 class="my-0">{{ producto.producto_nombre }}</h6>
+                <small class="text-muted">{{ producto.cantidad }} {{ producto.unidad }} @ {{ producto.precio }} {{ producto.moneda }}/{{ producto.unidad }}</small>
+              </div>
+              <span class="text-muted">${{ producto.precio_total_usd|floatformat:2 }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <hr>
+        <h5>Total: ${{ precio_total|floatformat:2 }}</h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success nuevo-pedido">Nuevo Pedido</button>
+        <button type="button" class="btn btn-secondary" id="btn-volver-pedido-cancelado">Volver</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal Pedido Injustificado -->
+{% if pedido_injustificado %}
+<div class="modal fade" id="pedidoInjustificadoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="pedidoInjustificadoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #e2e3e5;">
+        <h5 class="modal-title" id="pedidoInjustificadoModalLabel">
+          <i class="fas fa-question-circle text-secondary"></i> 
+          Pedido Injustificado #{{ pedido_id }}
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-secondary">
+          <strong>¡ATENCIÓN!</strong> Este pedido fue marcado como <strong>INJUSTIFICADO</strong>.
+          <br>Puede ser visualizado pero no modificado.
+        </div>
+        
+        <p><strong>Cliente:</strong> {{ cliente_nombre }}</p>
+        <p><strong>Fecha Creación:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+        <p><strong>Estado:</strong> <span class="badge bg-secondary">{{ pedido.status }}</span></p>
+        <hr>
+        <h6>Productos:</h6>
+        <ul class="list-group mb-3" style="max-height: 300px; overflow-y: auto;">
+          {% for producto in productos_pedido %}
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <div>
+                <h6 class="my-0">{{ producto.producto_nombre }}</h6>
+                <small class="text-muted">{{ producto.cantidad }} {{ producto.unidad }} @ {{ producto.precio }} {{ producto.moneda }}/{{ producto.unidad }}</small>
+              </div>
+              <span class="text-muted">${{ producto.precio_total_usd|floatformat:2 }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <hr>
+        <h5>Total: ${{ precio_total|floatformat:2 }}</h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-warning" id="btn-procesar-injustificado" data-pedido-id="{{ pedido_id }}">
+          <i class="fas fa-play me-2"></i>Procesar Pedido
+        </button>
+        <button type="button" class="btn btn-success nuevo-pedido">Nuevo Pedido</button>
+        <button type="button" class="btn btn-secondary" id="btn-volver-pedido-injustificado">Volver</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal Abrir Caja -->
+<div class="modal fade" id="abrirCajaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Abrir Caja</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="caja-form" class="row g-2">
+          <p class="fs-3">Dolares</p>
+          <!-- Campos para dólares -->
+          <div class="col-md-4">
+            <label for="inputD1" class="form-label">1$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputD1">
+          </div>
+          <div class="col-md-4">
+            <label for="inputD5" class="form-label">5$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputD5">
+          </div>
+          <div class="col-md-4">
+            <label for="inputD10" class="form-label">10$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputD10">
+          </div>
+          <div class="col-md-4">
+            <label for="inputD20" class="form-label">20$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputD20">
+          </div>
+          <div class="col-md-4">
+            <label for="inputD50" class="form-label">50$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputD50">
+          </div>
+          <div class="col-md-4">
+            <label for="inputD100" class="form-label">100$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputD100">
+          </div>
+          
+          <p class="fs-3">Bolivares</p>
+          <!-- Campos para bolívares -->
+          <div class="col-md-4">
+            <label for="inputB05" class="form-label">0.5 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputB05">
+          </div>
+          <div class="col-md-4">
+            <label for="inputB1" class="form-label">1 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputB1">
+          </div>
+          <div class="col-md-4">
+            <label for="inputB5" class="form-label">5 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputB5">
+          </div>
+          <div class="col-md-4">
+            <label for="inputB10" class="form-label">10 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputB10">
+          </div>
+          <div class="col-md-4">
+            <label for="inputB20" class="form-label">20 Bs</label>
+            <input type="number" value="0" min="0" class="form-control" id="inputB20">
+          </div>
+          <div class="col-md-4">
+            <label for="inputB50" class="form-label">50 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputB50">
+          </div>
+          <div class="col-md-4">
+            <label for="inputB100" class="form-label">100 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputB100">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="abrir-caja-btn">Abrir Caja</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cerrar Caja -->
+<div class="modal fade" id="cerrarCajaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cerrar Caja</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="cerrar-caja-form" class="row g-2">
+          <p class="fs-3">Dolares</p>
+          <!-- Campos para dólares -->
+          <div class="col-md-4">
+            <label for="inputCD1" class="form-label">1$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCD1">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCD5" class="form-label">5$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCD5">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCD10" class="form-label">10$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCD10">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCD20" class="form-label">20$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCD20">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCD50" class="form-label">50$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCD50">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCD100" class="form-label">100$</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCD100">
+          </div>
+          
+          <p class="fs-3">Bolivares</p>
+          <!-- Campos para bolívares -->
+          <div class="col-md-4">
+            <label for="inputCB05" class="form-label">0.5 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCB05">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCB1" class="form-label">1 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCB1">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCB5" class="form-label">5 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCB5">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCB10" class="form-label">10 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCB10">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCB20" class="form-label">20 Bs</label>
+            <input type="number" value="0" min="0" class="form-control" id="inputCB20">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCB50" class="form-label">50 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCB50">
+          </div>
+          <div class="col-md-4">
+            <label for="inputCB100" class="form-label">100 Bs</label>
+            <input type="number" min="0" value="0" class="form-control" id="inputCB100">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="cerrar-caja-submit">Cerrar Caja</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="notas-div" class="container-fluid vh-100 overflow-auto"
+  style="background-color: #B6BAB3; position: absolute; display: none;">
+  <div class="row">
+
+    <div class="col">
+
+    </div>
+    <div class="col">
+      <h2 class="mt-5">Notas del pedido</h2>
+      <button id="cerrar-notas" class="btn btn-success m-2">Cerrar Notas</button>
+      <div class="form-floating mb-3">
+        <textarea id="notas-textarea" class="form-control"
+          placeholder="Agrega mas detalles al pedido aqui"
+          id="floatingTextarea2" style="height: 400px"></textarea>
+        <label for="floatingTextarea2Disabled">Notas del pedido</label>
+        <button id="guardar-notas" class="btn btn-success m-2">Guardar Notas</button>
+      </div>
+    </div>
+    <div class="col"></div>
+
+  </div>
+
+</div>
+
+<div id="lista-pedidos-div" class="container-fluid vh-100 overflow-auto"
+  style="background-color: #B6BAB3; position: absolute; display: none;">
+  <div class="row">
+    <div class="col">
+      <div class="row">
+
+        <div class="col-1"></div>
+
+        <div class="col mt-3">
+          <button type="button" class="btn nuevo-pedido"
+            style="
+          background-color: #467012; color:white; cursor: pointer; border-radius: 4px;
+          ">Nuevo Pedido</button>
+          <button id="cerrar-listado-pedidos" type="button" class="btn"
+            style="
+          background-color: #467012; color:white; cursor: pointer; border-radius: 4px;
+          ">Cerrar</button>
+        </div>
+
+        <div class="col mt-3 ">
+          <input type="input" class="form-control" id="buscar-pedido-pos"
+            placeholder="Buscar Pedido por #" style="border-radius: 4px;">
+        </div>
+
+        <div class="col mt-3">
+          <button id="buscar-pedido-pos-btn" type="button" class="btn" style="
+          background-color: #467012; color:white; cursor: pointer; border-radius: 4px;
+          ">Buscar</button>
+        </div>
+
+        <div class="col mt-3">
+          <button id="ver-todos-pedidos-btn" type="button" class="btn" style="
+          background-color: #dc3545; color:white; cursor: pointer; border-radius: 4px;
+          ">Ver Todos</button>
+        </div>
+      </div>
+
+      <div class="container mt-3">
+        <table class="table table-hover table-bordered"
+          style="background-color:white;">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Cliente</th>
+              <th scope="col">Cajero</th>
+              <th scope="col">Pesador</th>
+              <th scope="col">Total</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-pedidos">
+            <!--
+            <tr>
+              <th scope="row">pedido.fecha</th>
+              <td>pedido.id</td>
+              <td>pedido.Cliente</td>
+              <td>pedido.cajero</td>
+              <td>pedido.total</td>
+              <td>pedido.status</td>
+            </tr>
+            -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="lista-clientes-div" class="container-fluid vh-100 overflow-auto"
+  style="background-color: #B6BAB3; position: absolute; display: none;">
+  <div class="row">
+    <div class="col">
+
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-5 me-auto mb-2 mb-lg-0">
+              <li id="cerrar-listado-clientes" class="nav-item ms-5"
+                style="background-color: #467012; padding: 10px; cursor: pointer; border-radius: 4px;">
+                <span class="navbar-text" style="color:white; ">Cerrar</span>
+              </li>
+
+              <li class="nav-item ms-5">
+                <form action method>
+                  <div class>
+                    <input type="input" class="form-control" id="buscarCliente"
+                      placeholder="Buscar Cliente por Cedula..."
+                      style="border-radius: 0px;">
+                  </div>
+                </form>
+              </li>
+              <li id="buscarClienteBtn" class="nav-item ms-5"
+                style="background-color: #467012; padding: 10px; cursor: pointer; border-radius: 4px;">
+                <span class="navbar-text" style="color:white; ">Buscar</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <div class="container">
+        <table class="table table-hover table-bordered table-striped"
+          style="background-color:white;">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Cedula</th>
+              <th scope="col">Telefono</th>
+              <th scope="col">Zona</th>
+              <th scope="col">Crédito Restante</th>
+              <th scope="col">Deuda Total</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-clientes">
+            <!-- Dynamic content will be added here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="row ">
+    <div class="col-4">
+      <!-- Modal de Pantalla Completa eliminado -->
+
+      <!-- Display de Peso Bluetooth -->
+      <div id="display-peso-bluetooth" class="row mb-2" style="display: none;">
+        <div class="border rounded text-center" style="background-color: #000000; color: #ff0000; padding: 8px 15px; font-family: 'Courier New', monospace; border: 2px solid #333333;">
+          <h1 class="mb-0" style="font-weight: bold; font-size: 48px; letter-spacing: 3px; line-height: 1.1;">
+            <span id="peso-display-valor">00.00</span> Kg
+          </h1>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div id="lista-de-pedidos"
+          class="border overflow-auto border-bottom border-success-subtle"
+          style="height: 400px;">
+          {% for producto in productos_pedido %}
+          <div id="id-{{producto.uniqueId}}"
+            class="container apuntar mt-1 border pedido-div-producto pedido-item div-producto-cargado">
+            <p style="display: none;">
+              {{producto.producto}}-{{producto.producto_nombre}}-{{producto.cantidad}}-{{producto.precio}}-{{producto.unidad}}-{{producto.barcode}}-{{producto.moneda}}-{{producto.uniqueId}}
+            </p>
+            <div class="row">
+              <div class="col-6">
+                <h5 class>{{producto.producto_nombre}}</h5>
+                <p class="fs-6">{{producto.cantidad}} {{producto.unidad}} en
+                  {{producto.precio_display}} {{producto.moneda}}/{{producto.unidad}}</p>
+              </div>
+              <div class="col-6">
+                <h6>{{producto.precio_display}} {{producto.moneda}} = {{ producto.precio }} Bs.F</h6>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="row">
+        <div class="border">
+          <h4 id="precio-total">Total: 0.00$ = 0.00 Bs.F</h4>
+        </div>
+      </div>
+
+      <div id="TecladoPesador" class="row" style="display: none;">
+        <div class="col-3">
+          <div class="row" style="height: 12rem; padding: 2px;">  
+            <div class="col apuntar hover-verde botonGuardarPedido"
+              style="border: 3px solid black; border-radius: 4px; background-color: #198754; color: white;">          
+              <p class=" mt-5 fs-4" id=""><strong>PAGAR</strong></p>  
+              </div>                        
+          </div>
+          <div class="row" style="height: 5rem;padding: 2px; ">  
+            <div  id="boton-c-pesador" class="col apuntar hover-verde" 
+              style="border: 3px solid black; border-radius: 4px; color: Black;">          
+              <p class="text-center mt-2 fs-2" id=""><strong>C</strong></p>  
+              </div>                       
+          </div>
+        </div>
+        <div class="col-5" >
+          <div class="row" style="height: 12rem; padding: 2px;">
+            <div id="tecla-tare" class="col apuntar hover-verde"
+              style="border: 3px solid black; border-radius: 8px;">
+              <p class="text-center mt-5 fs-2"><strong>TARE</strong></p>
+            </div>
+          </div>
+          <div class="row" style="height: 5rem; padding: 2px;">
+            <div id="tecla-zero" class="col apuntar hover-verde"
+              style="border: 3px solid black; border-radius: 4px;">
+              <p class="text-center mt-2 fs-2"><strong>ZERO</strong></p>
+            </div>
+          </div>
+        </div>
+        <div class="col-4 " >
+          <div class="row " style="height: 12rem; padding: 2px;">
+            <div id="tecla-peso" class="col apuntar hover-verde" style="border: 3px solid black; border-radius: 8px;">
+              <p class="text-center mt-5  fs-2"><strong>PESO</strong></p>
+            </div>
+
+          </div>
+          <div class="row " style="height: 5rem; padding: 2px;">
+            <div id=""class=" boton-borrar col apuntar hover-verde "style="border: 3px solid black; border-radius: 8px;">
+              <img style="width: 45px; margin-left: 40px; margin-top: 10px;" src="{% static '/backspace-fill.svg' %}" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="TecladoNumerico" class="row  "  >
+        <div class="col-3">
+          <div class="row" style="height: 12rem; padding: 2px;">  
+            <div class="col apuntar hover-verde botonGuardarPedido"
+              style="border: 3px solid black; border-radius: 4px; background-color: #198754; color: white;">          
+              <p class=" mt-5 fs-4" ><strong>PAGAR</strong></p>  
+              </div>                        
+          </div>
+          <div class="row" style="height: 5rem;padding: 2px; ">  
+            <div id="boton-c-numerico" class="col apuntar hover-verde "
+              style="border: 3px solid black; border-radius: 4px; color: Black;">          
+              <p class="text-center mt-2 fs-2" id=""><strong>C</strong></p>  
+              </div>                       
+          </div>
+        </div>
+        <div class="col-9 " >
+          <div class="row border" style="height: 4.25rem;">
+            <div id="boton-1"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>1</p>
+            </div>
+            <div id="boton-2"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>2</p>
+            </div>
+            <div id="boton-3"
+              class="col-3 apuntar  hover-verde boton-calculadora border">
+              <p>3</p>
+            </div>
+            <div id="boton-cantidad" class="col-3 apuntar border">
+            </div>
+          </div>
+          <div class="row border" style="height: 4.25rem;">
+            <div id="boton-4"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>4</p>
+            </div>
+            <div id="boton-5"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>5</p>
+            </div>
+            <div id="boton-6"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>6</p>
+            </div>
+            <div id class="col-3 apuntar  border">
+
+            </div>
+          </div>
+          <div class="row border" style="height: 4.25rem;">
+            <div id="boton-7"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>7</p>
+            </div>
+            <div id="boton-8"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>8</p>
+            </div>
+            <div id="boton-9"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>9</p>
+            </div>
+            <div id=""
+              class="col-3 apuntar hover-verde boton-calculador boton-borrar border">
+              <img src="{% static '/backspace-fill.svg' %}" />
+            </div>
+          </div>
+          <div class="row border" style="height: 4.25rem;">
+            <div class="col-3 apuntar border"></div>
+            <div id="boton-0"
+              class="col-3 apuntar hover-verde boton-calculadora border">
+              <p>0</p>
+            </div>
+            <div id="coma"
+              class="col-3 apuntar hover-verde boton-calculadora border">,</div>
+            <div id="boton-enter"
+              class="col-3 hover-verde apuntar boton-calculadora border">Enter</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8 vh-100" style="background-color: #B6BAB3;">
+      <div class="row m-1">
+        <div class="col-9"></div>
+        <div class="col-3">
+          <form action="#">
+            <div class>
+              <input id="buscar-productos" class="form-control"
+                onkeyup="buscarProductos()"
+                placeholder="Buscar productos">
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="divCategorias" class="d-flex gap-2 flex-nowrap"
+        style="overflow: auto;">
+        <div
+          class="p-2 bg-white apuntar text-center border rounded filtrar-por-categoria"
+          id="categoria-div-todas">
+          <div class="overflow-hidden p-2 text-center"
+            style="width: 100px; height: 100px;">
+            <img src="/media/todos.png" class="img-fluid rounded-top " alt
+              style="width: 200px;">
+          </div>
+          <ul class="list-inline">
+            <li class="list-inline-item text-capitalize">
+              <p class="fw-semibold fs-6">Todos</p>
+            </li>
+          </ul>
+        </div>
+        {% for categoria in categorias %}
+        <div
+          class="p-2 bg-white apuntar text-center border rounded filtrar-por-categoria"
+          id="categoria-div-{{categoria.id}}">
+          <p style="display: none;">{{categoria.id}}-{{categoria.nombre}}</p>
+          <div class="overflow-hidden p-2 text-center"
+            style="width: 100px; height: 100px;">
+            {% if categoria.imagen %}
+              <img src="{{ categoria.imagen.url }}" class="img-fluid rounded-top " alt="{{ categoria.nombre }}"
+                style="width: 200px;">
+            {% else %}
+              <img src="/media/todos.png" class="img-fluid rounded-top " alt="{{ categoria.nombre }}"
+                style="width: 200px;">
+            {% endif %}
+          </div>
+          <ul class="list-inline">
+            <li class="list-inline-item text-capitalize">
+              <p class="fw-semibold fs-6">{{categoria.nombre}}</p>
+            </li>
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+      <hr id="hr-ocultar">
+      <div id="divProductos" class="d-flex gap-2 flex-wrap"
+        style="overflow: scroll; height: 60%">
+        {% for producto in productos %}
+        <div
+          class="p-2 bg-white hover-verde apuntar text-center border rounded agregar-producto-pedido"
+          id="producto-div-{{producto.id}}" style="width: 180px; height: 180px; display: flex; flex-direction: column;">
+          <p class="todos-los-productos" style="display: none;">
+            {{producto.id}}-{{producto.nombre}}-{{producto.precio_detal}}-{{producto.unidad}}-{{producto.barcode}}-{{producto.moneda}}-{% for cat in producto.categoria.all %}{{cat.id}},{% endfor %}
+          </p>
+          <div class="overflow-hidden text-center mb-2"
+            style="height: 80px; flex-shrink: 0;">
+            {% if producto.imagen %}
+              <img src="{{ producto.imagen.url }}"
+                class="img-fluid" alt="{{ producto.nombre }}" style="max-width: 80px; max-height: 80px; object-fit: contain;">
+            {% else %}
+              <img src="/media/logo.png"
+                class="img-fluid" alt="{{ producto.nombre }}" style="max-width: 80px; max-height: 80px; object-fit: contain;">
+            {% endif %}
+          </div>
+          <div class="text-center" style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 0 4px;">
+            <div style="overflow: hidden; margin-bottom: 2px;">
+              <strong style="font-size: 0.85rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word;">
+                {{producto.nombre}}
+              </strong>
+            </div>
+            <div style="font-size: 0.75rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; color: #666;">
+              {{producto.precio_display}}{{producto.moneda}}/{{producto.unidad}}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="number" id="bar-code-reader" style="display: none;">
+<p id="url-home" style="display: none;">{% url 'pos:home' %}</p>
+<p id="pedido_id" style="display: none;">{{pedido_id}}</p>
+<p id="nuevo_pedido_id" style="display: none;">{{nuevo_pedido}}</p>
+<p id="precio_total" style="display: none;">{{ precio_total|stringformat:".2f" }}</p>
+<p id="dolar-p" style="display: none;">{{ dolar|stringformat:".2f" }}</p>
+<p id="cliente_id" style="display: none;">{{cliente_id}}</p>
+<p id="cliente_nombre" style="display: none;">{{cliente_nombre}}</p>
+<p id="user-groups" style="display: none;">{{ user.groups.all|join:"," }}</p>
+<p id="usuario" style="display: none;">{{user.get_username}}</p>
+<p id="pedido_status" style="display: none;">{{status}}</p>
+<p id="beep" style="display: none;">{% static '/beep.mp3' %}</p>
+
+<!-- Modal Configurar Balanza -->
+<div class="modal fade" id="configurarBalanzaModal" tabindex="-1" aria-labelledby="configurarBalanzaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="configurarBalanzaModalLabel">Configurar Balanza</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Modo de Conexión:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="modoBalanza" id="modoWifi" value="wifi">
+            <label class="form-check-label" for="modoWifi">
+              WiFi/Socket (Tradicional)
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="modoBalanza" id="modoBluetooth" value="bluetooth">
+            <label class="form-check-label" for="modoBluetooth">
+              Bluetooth LE (Nuevo)
+            </label>
+          </div>
+        </div>
+                 <div id="configuracion-wifi" style="display: none;">
+           <div class="alert alert-info">
+             <strong>WiFi/Socket:</strong> Se usará la balanza configurada en el sistema.
+           </div>
+         </div>
+        <div id="configuracion-bluetooth" style="display: none;">
+          <div class="alert alert-info">
+            <strong>Bluetooth LE:</strong> Se conectará automáticamente a la balanza Bluetooth configurada.
+          </div>
+          <div id="bluetooth-status" class="mb-2">
+            <span id="bluetooth-connection-status">Estado: Desconectado</span>
+          </div>
+          <button type="button" class="btn btn-primary" id="conectar-bluetooth-btn">Conectar Balanza Bluetooth</button>
+          <button type="button" class="btn btn-secondary" id="desconectar-bluetooth-btn" disabled>Desconectar</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="guardar-configuracion-balanza">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Salir del SCG POS -->
+<div class="modal fade" id="salirPOSModal" tabindex="-1" aria-labelledby="salirPOSModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="salirPOSModalLabel">Confirmar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ¿Está seguro que desea salir?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmar-salir-pos">Salir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Autorización para Procesar Pedido Injustificado -->
+<div class="modal fade" id="autorizacionInjustificadoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #fff3cd;">
+        <h5 class="modal-title">
+          <i class="fas fa-shield-alt text-warning me-2"></i>
+          Autorización Requerida
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>¡Atención!</strong> Para procesar un pedido injustificado se requiere autorización de Supervisor o Administrador.
+        </div>
+        
+        <form id="form-autorizacion-injustificado">
+          <div class="mb-3">
+            <label for="codigoAutorizacionInjustificado" class="form-label">
+              <strong>Código de Autorización:</strong>
+            </label>
+            <input type="password" 
+                   class="form-control form-control-lg text-center" 
+                   id="codigoAutorizacionInjustificado" 
+                   placeholder="Ingrese el código"
+                   autocomplete="off">
+          </div>
+          
+          <div class="text-center">
+            <p class="text-muted small">
+              <i class="fas fa-info-circle me-1"></i>
+              Solo supervisores y administradores pueden autorizar este proceso
+            </p>
+          </div>
+          
+          <div id="error-autorizacion-injustificado" class="alert alert-danger d-none">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Código de autorización incorrecto
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="btn-confirmar-autorizacion-injustificado">
+          <i class="fas fa-check me-2"></i>Autorizar y Procesar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Selección Rápida de Balanzas -->
+<div class="modal fade" id="modalBalanzaRapida" tabindex="-1" aria-labelledby="modalBalanzaRapidaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalBalanzaRapidaLabel">
+          <i class="fas fa-weight-hanging"></i> Selección Rápida de Balanza
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <p class="text-muted text-center">
+              <i class="fas fa-info-circle"></i> Selecciona la balanza que deseas utilizar para el pesado de productos
+            </p>
+          </div>
+        </div>
+        <div class="row" id="balanzas-cards-container">
+          <!-- Las cards se llenarán dinámicamente con JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Estilos para el botón PAGAR deshabilitado */
+  .boton-deshabilitado {
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+  }
+</style>
+
+{% endblock content %}

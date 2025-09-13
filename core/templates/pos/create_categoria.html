@@ -1,0 +1,125 @@
+{%extends 'menu.html'%}
+
+{%block content%}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-tags me-2"></i>
+                        {% if object %}Editar Categoría{% else %}Nueva Categoría{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Información básica -->
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.nombre.id_for_label }}" class="form-label fw-bold">
+                                                <i class="fas fa-tag me-1"></i>Nombre de la Categoría
+                                            </label>
+                                            {{ form.nombre }}
+                                            {% if form.nombre.errors %}
+                                                <div class="text-danger small mt-1">
+                                                    {{ form.nombre.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="{{ form.orden.id_for_label }}" class="form-label fw-bold">
+                                                <i class="fas fa-sort-numeric-up me-1"></i>Orden
+                                            </label>
+                                            {{ form.orden }}
+                                            {% if form.orden.errors %}
+                                                <div class="text-danger small mt-1">
+                                                    {{ form.orden.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.imagen.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-image me-1"></i>Imagen de la Categoría
+                                    </label>
+                                    {{ form.imagen }}
+                                    {% if form.imagen.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.imagen.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Formatos soportados: JPG, PNG, GIF. Tamaño máximo: 2MB
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Preview de imagen -->
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-eye me-1"></i>Vista Previa
+                                    </label>
+                                    <div class="border rounded p-3 text-center bg-light" style="min-height: 200px;">
+                                        <div id="image-preview" class="d-flex align-items-center justify-content-center h-100">
+                                            {% if object.imagen %}
+                                                <img src="{{ object.imagen.url }}" alt="Imagen actual" class="img-fluid rounded" style="max-height: 180px;">
+                                            {% else %}
+                                                <div class="text-muted">
+                                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                                    <p class="mb-0">No hay imagen seleccionada</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'pos:categorias' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if object %}Actualizar{% else %}Guardar{% endif %} Categoría
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview de imagen
+document.getElementById('{{ form.imagen.id_for_label }}').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('image-preview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" alt="Vista previa" class="img-fluid rounded" style="max-height: 180px;">';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = '<div class="text-muted"><i class="fas fa-image fa-3x mb-2"></i><p class="mb-0">No hay imagen seleccionada</p></div>';
+    }
+});
+</script>
+
+{%endblock content%}

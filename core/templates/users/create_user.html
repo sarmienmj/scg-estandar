@@ -1,0 +1,52 @@
+{% extends 'menu.html' %}
+
+{% block title %}Crear Usuario - SCG POS{% endblock title %}
+
+{% block content %}
+<div class="container">
+  <p class="fs-2">Crear Usuario</p>
+  <div class="row">
+    <div class="col-1"></div>
+    <div class="col-5">
+      <div class="center">
+        <form method="post" class="card p-2" novalidate>
+          {% csrf_token %}
+          <h5>Crear Producto</h5>
+          <div class="mb-3">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+          </div>
+          <div class="mb-3">
+            {{ form.first_name.label_tag }}
+            {{ form.first_name }}
+          </div>
+          <div class="mb-3">
+            {{ form.last_name.label_tag }}
+            {{ form.last_name }}
+          </div>
+          <div class="mb-3">
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+          </div>
+          <div class="mb-3">
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+          </div>
+          <label for="group">Grupo:</label>
+          <select name="group" class="form-select mb-3">
+            <option value>Seleccione un grupo</option>
+            {% for group in groups %}
+            <option value="{{ group.name }}">{{ group.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-buttons m-2">
+            <input type="submit" value="Crear Usuario" class="btn btn-primary" />
+            <a href="{%url 'pos:usuarios' %}" class="btn btn-outline">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

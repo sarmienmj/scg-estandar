@@ -1,0 +1,23 @@
+{% for cierre in cierres %}
+<tr>
+    <td data-label="ID" class="cierre-id">{{ cierre.id }}</td>
+    <td data-label="Usuario" class="usuario-nombre">{{ cierre.usuario.username }}</td>
+    <td data-label="Fecha Inicio" class="fecha-info">{{ cierre.fechaInicio|date:"d/m/Y h:i A" }}</td>
+    <td data-label="Fecha Fin" class="fecha-info">{{ cierre.fechaFin|date:"d/m/Y h:i A" }}</td>
+    <td data-label="Inicial USD" class="dinero-info dinero-usd">${{ cierre.dinero_inicial_usd|floatformat:2 }}</td>
+    <td data-label="Inicial BS" class="dinero-info dinero-bs">Bs. {{ cierre.dinero_inicial_bs|floatformat:2 }}</td>
+    <td data-label="Final USD" class="dinero-info dinero-usd">${{ cierre.dinero_final_usd|floatformat:2 }}</td>
+    <td data-label="Final BS" class="dinero-info dinero-bs">Bs. {{ cierre.dinero_final_bs|floatformat:2 }}</td>
+    <td data-label="Diferencia USD" class="dinero-info {% if cierre.diferencia_usd < 0 %}text-danger{% else %}text-success{% endif %}">
+        ${{ cierre.diferencia_usd|floatformat:2 }}
+    </td>
+    <td data-label="Diferencia BS" class="dinero-info {% if cierre.diferencia_bs < 0 %}text-danger{% else %}text-success{% endif %}">
+        Bs. {{ cierre.diferencia_bs|floatformat:2 }}
+    </td>
+    <td data-label="Acciones">
+        <a href="{% url 'pos:detalle-cierre' cierre.id %}" class="btn-detail">
+            📋 Ver Detalle
+        </a>
+    </td>
+</tr>
+{% endfor %} 

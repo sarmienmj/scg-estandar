@@ -1,0 +1,112 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Gestión de Pagos Móviles</h2>
+    
+    <!-- Formulario de filtros -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Filtrar Pagos Móviles</h5>
+        </div>
+        <div class="card-body">
+            <form id="form-filtros" class="row g-3">
+                <div class="col-md-3">
+                    <label for="fecha_desde" class="form-label">Fecha desde</label>
+                    <input type="date" class="form-control" id="fecha_desde" name="fecha_desde">
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha_hasta" class="form-label">Fecha hasta</label>
+                    <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta">
+                </div>
+                <div class="col-md-3">
+                    <label for="referencia" class="form-label">Referencia</label>
+                    <input type="text" class="form-control" id="referencia" name="referencia">
+                </div>
+                <div class="col-md-3">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono">
+                </div>
+                <div class="col-md-3">
+                    <label for="cliente" class="form-label">Cliente</label>
+                    <input type="text" class="form-control" id="cliente" name="cliente">
+                </div>
+                <div class="col-md-3">
+                    <label for="verificado" class="form-label">Estado</label>
+                    <select class="form-select" id="verificado" name="verificado">
+                        <option value="todos">Todos</option>
+                        <option value="verificados">Verificados</option>
+                        <option value="no_verificados">No Verificados</option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="button" id="btn-filtrar" class="btn btn-success me-2">Filtrar</button>
+                    <button type="button" id="btn-reset" class="btn btn-secondary">Limpiar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Tabla de pagos móviles -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Listado de Pagos Móviles</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Referencia</th>
+                            <th>Monto (Bs)</th>
+                            <th>Fecha</th>
+                            <th>Teléfono</th>
+                            <th>Cliente</th>
+                            <th>Cajero</th>
+                            <th>Pedido</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagos-moviles-tabla">
+                        {% for pago in pagos_moviles %}
+                        <tr class="{% if pago.verificado %}table-success{% else %}table-danger{% endif %}">
+                            <td>{{ pago.referencia }}</td>
+                            <td>{{ pago.monto }}</td>
+                            <td>{{ pago.fecha|date:"d-m-Y H:i" }}</td>
+                            <td>{{ pago.telefono }}</td>
+                            <td>{{ pago.cliente|default:"N/A" }}</td>
+                            <td>{{ pago.cajero }}</td>
+                            <td>{{ pago.pedido_id }}</td>
+                            <td>
+                                {% if pago.verificado %}
+                                <span class="badge bg-success">Verificado</span>
+                                {% else %}
+                                <span class="badge bg-danger">No Verificado</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    {% if not pago.verificado %}
+                                    <button class="btn btn-sm btn-success verificar-pago" data-id="{{ pago.id }}" data-url="{% url 'pos:verificar-pago-movil' %}">Verificar</button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-secondary" disabled>Verificado</button>
+                                    {% endif %}
+                                    <a href="{% url 'pos:posPedido' pago.pedido_id %}" class="btn btn-sm btn-info ms-1">Ver Pedido</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center">No hay pagos móviles registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 

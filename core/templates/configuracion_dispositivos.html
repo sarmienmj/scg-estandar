@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+{% load static %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Dispositivos - SCG POS</title>
+    
+    <!-- Estilos locales -->
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Icono -->
+    <link rel="icon" type="image/x-icon" href="/media/logo.png">
+    
+<style>
+/* Estilos base exactos del home/menú */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #2d5016 0%, #3e7b27 25%, #4a7c59 50%, #2d5016 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* Header con estilo exacto del menú */
+.config-header {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border-bottom: 3px solid #4a7c59;
+    box-shadow: 0 8px 25px rgba(45, 80, 22, 0.2);
+    padding: 15px 0;
+    margin-bottom: 30px;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.config-header h1 {
+    margin: 0;
+    color: #2d5016;
+    font-weight: bold;
+    font-size: 2.2rem;
+}
+
+.config-header .subtitle {
+    color: #4a7c59;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Contenedor principal con padding por header fijo */
+.config-container {
+    padding: 120px 20px 50px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Cards con estilo del sistema */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    margin-bottom: 30px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border: none;
+    border-radius: 15px 15px 0 0 !important;
+    padding: 20px 25px;
+    font-weight: 600;
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%) !important;
+    color: white;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%) !important;
+    color: white;
+}
+
+.card-header.bg-info {
+    background: linear-gradient(135deg, #4a7c59 0%, #2d5016 100%) !important;
+    color: white;
+}
+
+/* Botón volver exacto del menú */
+.btn-volver {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1001;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-volver:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    color: white;
+    text-decoration: none;
+}
+/* Estilos adicionales para las tablas */
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.table tbody tr:hover:not(.table-warning) {
+    background-color: rgba(74, 124, 89, 0.08);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.table tbody tr.table-warning {
+    background-color: rgba(243, 156, 18, 0.1) !important;
+    border-color: rgba(243, 156, 18, 0.2);
+}
+
+.table tbody tr.table-success {
+    background-color: rgba(45, 80, 22, 0.05) !important;
+}
+
+.table thead.table-dark th {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%) !important;
+    border-color: #4a7c59;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+code {
+    background-color: rgba(74, 124, 89, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #2d5016;
+    font-weight: 500;
+    border: 1px solid rgba(74, 124, 89, 0.2);
+}
+
+/* Botones con estilo del menú */
+.btn-success, .btn-outline-success {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover, .btn-outline-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+    background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    color: white;
+}
+
+.btn-outline-primary {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+    background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    color: white;
+}
+
+/* Botón warning (seleccionado) */
+.btn-warning {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+    background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    color: white;
+}
+
+.badge {
+    min-width: 100px;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-group .btn {
+    margin-right: 0;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Transición suave para los cambios de estado */
+.badge, .table tbody tr {
+    transition: all 0.3s ease;
+}
+
+/* Mejorar la apariencia de los botones pequeños */
+.btn-sm {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+}
+
+/* Toast container con tema verde */
+.toast-container .toast {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(74, 124, 89, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(45, 80, 22, 0.15);
+}
+
+/* Modales con tema verde */
+.modal-content {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(45, 80, 22, 0.2);
+}
+
+.modal-header.bg-success {
+    background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%) !important;
+    border-bottom: 1px solid rgba(74, 124, 89, 0.2);
+}
+
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%) !important;
+    border-bottom: 1px solid rgba(74, 124, 89, 0.2);
+}
+
+/* Botones secundarios con estilo del menú */
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    color: white;
+}
+
+/* Spinners con colores del tema */
+.spinner-border.text-success {
+    color: #3e7b27 !important;
+}
+
+.text-success {
+    color: #2d5016 !important;
+}
+
+.text-primary {
+    color: #4a7c59 !important;
+}
+
+/* Alerts con tema verde */
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.2);
+    color: #721c24;
+}
+
+.alert-light {
+    background-color: rgba(74, 124, 89, 0.05);
+    border-color: rgba(74, 124, 89, 0.1);
+    border-radius: 12px;
+}
+</style>
+</head>
+
+<body>
+    <!-- Botón para volver -->
+    <a href="/pos/" class="btn btn-primary btn-volver">
+        <i class="fas fa-arrow-left"></i> Volver al POS
+    </a>
+
+    <!-- Header independiente -->
+    <div class="config-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1><i class="fas fa-cogs"></i> Configuración de Dispositivos</h1>
+                    <p class="subtitle">Configura y gestiona tus impresoras y balanzas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="config-container">
+        <div class="container-fluid">
+    
+    <!-- Sección de Dispositivos Seleccionados -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-star"></i> Dispositivos Seleccionados Actualmente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="alert alert-light" role="alert">
+                                <strong><i class="fas fa-print"></i> Impresora:</strong>
+                                <span id="impresora-actual">Ninguna seleccionada</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-light" role="alert">
+                                <strong><i class="fas fa-weight"></i> Balanza:</strong>
+                                <span id="balanza-actual">Ninguna seleccionada</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Impresoras -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-print"></i> Impresoras de Tickets</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 12%;">ID</th>
+                                    <th style="width: 28%;">Nombre</th>
+                                    <th style="width: 20%;">IP</th>
+                                    <th style="width: 20%;">Prueba</th>
+                                    <th style="width: 20%;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        {% for imp_id, impresora in impresoras.items %}
+                                <tr id="row-imp-{{ imp_id }}">
+                                    <td><strong>{{ imp_id }}</strong></td>
+                                    <td>{{ impresora.nombre }}</td>
+                                    <td><code>{{ impresora.ip }}</code></td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm" 
+                                                onclick="probarImpresora('{{ imp_id }}')"
+                                                id="btn-test-imp-{{ imp_id }}"
+                                                title="Imprimir Ticket de Prueba">
+                                            <i class="fas fa-print"></i> Probar
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" 
+                                                onclick="seleccionarImpresora('{{ imp_id }}', '{{ impresora.nombre }}', '{{ impresora.ip }}')"
+                                                id="btn-select-imp-{{ imp_id }}">
+                                            <i class="fas fa-check-circle"></i> Seleccionar
+                                        </button>
+                                    </td>
+                                </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Balanzas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-weight"></i> Conexión a Balanzas</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 12%;">ID</th>
+                                    <th style="width: 28%;">Nombre</th>
+                                    <th style="width: 30%;">IP</th>
+                                    <th style="width: 30%;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        {% for bal_id, balanza in balanzas.items %}
+                                <tr id="row-bal-{{ bal_id }}">
+                                    <td><strong>{{ bal_id }}</strong></td>
+                                    <td>{{ balanza.nombre }}</td>
+                                    <td><code>{{ balanza.ip }}</code></td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" 
+                                                onclick="seleccionarBalanza('{{ bal_id }}', '{{ balanza.nombre }}', '{{ balanza.ip }}')"
+                                                id="btn-select-bal-{{ bal_id }}">
+                                            <i class="fas fa-check-circle"></i> Seleccionar
+                                        </button>
+                                    </td>
+                                </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sección de Configuraciones de Modo -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0"><i class="fas fa-cog"></i> Configuración de Modo de Impresión</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5>Modo de Impresión Actual</h5>
+                        <p class="text-muted">Selecciona cómo quieres que se impriman los pedidos en el POS</p>
+                        <div class="alert alert-info" role="alert">
+                            <strong><i class="fas fa-info-circle"></i> Modo Actual:</strong>
+                            <span id="modo-actual-display">Cargando...</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-lg" 
+                                    onclick="cambiarModoImpresion('ticket')"
+                                    id="btn-modo-ticket">
+                                <i class="fas fa-receipt"></i><br>
+                                <strong>Modo Ticket</strong><br>
+                                <small>Impresión ESC/POS tradicional</small>
+                            </button>
+                            <button class="btn btn-outline-success btn-lg" 
+                                    onclick="cambiarModoImpresion('etiqueta')"
+                                    id="btn-modo-etiqueta">
+                                <i class="fas fa-tags"></i><br>
+                                <strong>Modo Etiqueta</strong><br>
+                                <small>Etiqueta TSPL con código de barras</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar resultados -->
+<div class="modal fade" id="resultadoModal" tabindex="-1" aria-labelledby="resultadoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultadoModalLabel">Resultado de Prueba</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="resultado-contenido"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Este evento DOMContentLoaded se maneja al final del archivo
+
+
+
+
+
+
+
+
+
+// Función para seleccionar impresora - MODIFICADA para guardar IP
+function seleccionarImpresora(impId, nombre, impresoraIp) {
+    try {
+        // 🔥 CAMBIO PRINCIPAL: Guardar IP directamente en localStorage
+        localStorage.setItem('impresora', impresoraIp);
+        localStorage.setItem('impresora_nombre', nombre); // Para mostrar en UI
+        localStorage.setItem('impresora_id', impId); // Por compatibilidad
+        
+        // Actualizar UI - remover selección anterior
+        document.querySelectorAll('[id^="btn-select-imp-"]').forEach(btn => {
+            btn.classList.remove('btn-warning');
+            btn.classList.add('btn-success');
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar';
+        });
+        
+        // Remover highlight de filas anteriores
+        document.querySelectorAll('[id^="row-imp-"]').forEach(row => {
+            if (row.classList.contains('table-warning')) {
+                row.classList.remove('table-warning');
+            }
+        });
+        
+        // Marcar como seleccionada
+        const btnSeleccionado = document.getElementById(`btn-select-imp-${impId}`);
+        btnSeleccionado.classList.remove('btn-success');
+        btnSeleccionado.classList.add('btn-warning');
+        btnSeleccionado.innerHTML = '<i class="fas fa-star"></i> Seleccionada';
+        
+        // Resaltar fila seleccionada
+        const rowSeleccionada = document.getElementById(`row-imp-${impId}`);
+        if (rowSeleccionada) {
+            rowSeleccionada.classList.add('table-warning');
+        }
+        
+        // Actualizar sección informativa
+        actualizarInfoDispositivos();
+        
+        // Mostrar toast de confirmación
+        mostrarToast(`Impresora "${nombre}" configurada correctamente<br><small>IP: ${impresoraIp}</small>`, 'success');
+        
+    } catch (error) {
+        console.error('Error al seleccionar impresora:', error);
+        mostrarResultado('Error al seleccionar la impresora', false);
+    }
+}
+
+// Función para seleccionar balanza - MODIFICADA para guardar IP
+function seleccionarBalanza(balId, nombre, balanzaIp) {
+    try {
+        // 🔥 CAMBIO PRINCIPAL: Guardar IP directamente en localStorage
+        localStorage.setItem('balanza', balanzaIp);
+        localStorage.setItem('balanza_nombre', nombre); // Para mostrar en UI
+        localStorage.setItem('balanza_id', balId); // Por compatibilidad
+        
+        // Actualizar UI - remover selección anterior
+        document.querySelectorAll('[id^="btn-select-bal-"]').forEach(btn => {
+            btn.classList.remove('btn-warning');
+            btn.classList.add('btn-success');
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar';
+        });
+        
+        // Remover highlight de filas anteriores
+        document.querySelectorAll('[id^="row-bal-"]').forEach(row => {
+            if (row.classList.contains('table-warning')) {
+                row.classList.remove('table-warning');
+            }
+        });
+        
+        // Marcar como seleccionada
+        const btnSeleccionado = document.getElementById(`btn-select-bal-${balId}`);
+        btnSeleccionado.classList.remove('btn-success');
+        btnSeleccionado.classList.add('btn-warning');
+        btnSeleccionado.innerHTML = '<i class="fas fa-star"></i> Seleccionada';
+        
+        // Resaltar fila seleccionada
+        const rowSeleccionada = document.getElementById(`row-bal-${balId}`);
+        if (rowSeleccionada) {
+            rowSeleccionada.classList.add('table-warning');
+        }
+        
+        // Actualizar sección informativa
+        actualizarInfoDispositivos();
+        
+        // Mostrar toast de confirmación
+        mostrarToast(`Balanza "${nombre}" configurada correctamente<br><small>IP: ${balanzaIp}</small>`, 'success');
+        
+    } catch (error) {
+        console.error('Error al seleccionar balanza:', error);
+        mostrarResultado('Error al seleccionar la balanza', false);
+    }
+}
+
+// Función para actualizar la información de dispositivos seleccionados
+function actualizarInfoDispositivos() {
+    try {
+        // Obtener dispositivos seleccionados del localStorage
+        const impresoraIp = localStorage.getItem('impresora');
+        const impresoraNombre = localStorage.getItem('impresora_nombre');
+        const balanzaIp = localStorage.getItem('balanza');
+        const balanzaNombre = localStorage.getItem('balanza_nombre');
+        
+        // Actualizar información de impresora - USANDO IP y nombre guardados
+        const spanImpresora = document.getElementById('impresora-actual');
+        if (impresoraIp && spanImpresora) {
+            if (impresoraNombre) {
+                spanImpresora.innerHTML = `<span class="text-success">${impresoraNombre} (${impresoraIp})</span>`;
+            } else {
+                spanImpresora.innerHTML = `<span class="text-success">IP: ${impresoraIp}</span>`;
+            }
+        } else if (spanImpresora) {
+            spanImpresora.innerHTML = '<span class="text-muted">Ninguna seleccionada</span>';
+        }
+        
+        // Actualizar información de balanza - USANDO IP y nombre guardados
+        const spanBalanza = document.getElementById('balanza-actual');
+        if (balanzaIp && spanBalanza) {
+            if (balanzaNombre) {
+                spanBalanza.innerHTML = `<span class="text-success">${balanzaNombre} (${balanzaIp})</span>`;
+            } else {
+                spanBalanza.innerHTML = `<span class="text-success">IP: ${balanzaIp}</span>`;
+            }
+        } else if (spanBalanza) {
+            spanBalanza.innerHTML = '<span class="text-muted">Ninguna seleccionada</span>';
+        }
+        
+    } catch (error) {
+        console.error('Error al actualizar información de dispositivos:', error);
+    }
+}
+
+// Función para cargar selecciones guardadas al cargar la página
+function cargarSeleccionesGuardadas() {
+    try {
+        // Cargar impresora seleccionada - USANDO IP guardada
+        const impresoraIp = localStorage.getItem('impresora');
+        const impresoraId = localStorage.getItem('impresora_id'); // ID guardado por compatibilidad
+        
+        if (impresoraIp && impresoraId) {
+            // Buscar el botón usando el ID que tenemos guardado
+            const btnImpresora = document.getElementById(`btn-select-imp-${impresoraId}`);
+            if (btnImpresora) {
+                btnImpresora.classList.remove('btn-success');
+                btnImpresora.classList.add('btn-warning');
+                btnImpresora.innerHTML = '<i class="fas fa-star"></i> Seleccionada';
+                
+                // Resaltar la fila correspondiente
+                const row = document.getElementById(`row-imp-${impresoraId}`);
+                if (row) {
+                    row.classList.add('table-warning');
+                }
+            }
+        } else if (impresoraIp && !impresoraId) {
+            // Caso de migración: tenemos IP pero no ID, buscar por IP en los elementos onclick
+            console.log('Migrando configuración de impresora antigua...');
+            const buttons = document.querySelectorAll('[onclick*="seleccionarImpresora"]');
+            for (const button of buttons) {
+                const onclickValue = button.getAttribute('onclick');
+                if (onclickValue.includes(impresoraIp)) {
+                    // Extraer el ID del botón
+                    const impIdMatch = button.id.match(/btn-select-imp-(.+)/);
+                    if (impIdMatch) {
+                        const foundImpId = impIdMatch[1];
+                        // Guardar el ID para futura compatibilidad
+                        localStorage.setItem('impresora_id', foundImpId);
+                        
+                        // Actualizar UI
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-warning');
+                        button.innerHTML = '<i class="fas fa-star"></i> Seleccionada';
+                        
+                        const row = document.getElementById(`row-imp-${foundImpId}`);
+                        if (row) {
+                            row.classList.add('table-warning');
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Cargar balanza seleccionada - USANDO IP guardada
+        const balanzaIp = localStorage.getItem('balanza');
+        const balanzaId = localStorage.getItem('balanza_id'); // ID guardado por compatibilidad
+        
+        if (balanzaIp && balanzaId) {
+            // Buscar el botón usando el ID que tenemos guardado
+            const btnBalanza = document.getElementById(`btn-select-bal-${balanzaId}`);
+            if (btnBalanza) {
+                btnBalanza.classList.remove('btn-success');
+                btnBalanza.classList.add('btn-warning');
+                btnBalanza.innerHTML = '<i class="fas fa-star"></i> Seleccionada';
+                
+                // Resaltar la fila correspondiente
+                const row = document.getElementById(`row-bal-${balanzaId}`);
+                if (row) {
+                    row.classList.add('table-warning');
+                }
+            }
+        } else if (balanzaIp && !balanzaId) {
+            // Caso de migración: tenemos IP pero no ID, buscar por IP en los elementos onclick
+            console.log('Migrando configuración de balanza antigua...');
+            const buttons = document.querySelectorAll('[onclick*="seleccionarBalanza"]');
+            for (const button of buttons) {
+                const onclickValue = button.getAttribute('onclick');
+                if (onclickValue.includes(balanzaIp)) {
+                    // Extraer el ID del botón
+                    const balIdMatch = button.id.match(/btn-select-bal-(.+)/);
+                    if (balIdMatch) {
+                        const foundBalId = balIdMatch[1];
+                        // Guardar el ID para futura compatibilidad
+                        localStorage.setItem('balanza_id', foundBalId);
+                        
+                        // Actualizar UI
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-warning');
+                        button.innerHTML = '<i class="fas fa-star"></i> Seleccionada';
+                        
+                        const row = document.getElementById(`row-bal-${foundBalId}`);
+                        if (row) {
+                            row.classList.add('table-warning');
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error al cargar selecciones guardadas:', error);
+    }
+}
+
+// Función para mostrar toasts de confirmación
+function mostrarToast(mensaje, tipo = 'info') {
+    // Crear container de toasts si no existe
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Crear el toast
+    const toastId = 'toast-' + Date.now();
+    const bgClass = tipo === 'success' ? 'bg-success' : tipo === 'error' ? 'bg-danger' : 'bg-info';
+    
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas ${tipo === 'success' ? 'fa-check-circle' : tipo === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>
+                    ${mensaje}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // Mostrar el toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: tipo === 'success' ? 3000 : 5000
+    });
+    
+    toast.show();
+    
+    // Remover el elemento después de que se oculte
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
+}
+
+// Modificar el evento DOMContentLoaded para incluir la carga de selecciones
+document.addEventListener('DOMContentLoaded', function() {
+    cargarSeleccionesGuardadas();
+    actualizarInfoDispositivos();
+    
+    // Agregar tooltips mejorados
+    document.querySelectorAll('[title]').forEach(element => {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            new bootstrap.Tooltip(element);
+        }
+    });
+    
+    // Agregar event listener para hacer clic en filas de impresoras (experiencia mejorada)
+    document.querySelectorAll('[id^="row-imp-"]').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Solo activar si no se hizo clic en un botón
+            if (!e.target.closest('button')) {
+                const impresoraId = this.id.replace('row-imp-', '');
+                const selectBtn = document.getElementById(`btn-select-imp-${impresoraId}`);
+                if (selectBtn) {
+                    selectBtn.click();
+                }
+            }
+        });
+    });
+    
+    // Agregar event listener para hacer clic en filas de balanzas (experiencia mejorada)
+    document.querySelectorAll('[id^="row-bal-"]').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Solo activar si no se hizo clic en un botón
+            if (!e.target.closest('button')) {
+                const balanzaId = this.id.replace('row-bal-', '');
+                const selectBtn = document.getElementById(`btn-select-bal-${balanzaId}`);
+                if (selectBtn) {
+                    selectBtn.click();
+                }
+            }
+        });
+    });
+    
+    console.log('✅ Sistema de configuración de dispositivos inicializado');
+    console.log('📱 Balanza actual (IP):', localStorage.getItem('balanza'));
+    console.log('🖨️ Impresora actual (IP):', localStorage.getItem('impresora'));
+    
+    // Cargar configuración de modo de impresión
+    cargarModoImpresion();
+    
+    // Mostrar notificación de bienvenida si no hay dispositivos configurados
+    const balanzaActual = localStorage.getItem('balanza');
+    const impresoraActual = localStorage.getItem('impresora');
+    
+    if (!balanzaActual && !impresoraActual) {
+        setTimeout(() => {
+            mostrarToast('⚠️ Configura al menos una impresora y una balanza para usar el POS', 'info');
+        }, 1000);
+    } else if (!impresoraActual) {
+        setTimeout(() => {
+            mostrarToast('⚠️ Configura una impresora para procesar pedidos', 'info');
+        }, 1000);
+    } else if (!balanzaActual) {
+        setTimeout(() => {
+            mostrarToast('ℹ️ Configura una balanza para productos pesados', 'info');
+        }, 1000);
+    }
+});
+
+// ===== SISTEMA DE CONFIGURACIÓN DE MODO DE IMPRESIÓN =====
+
+// Función para cambiar el modo de impresión
+function cambiarModoImpresion(modo) {
+    const modoAnterior = localStorage.getItem('modoImpresion') || 'ticket';
+    localStorage.setItem('modoImpresion', modo);
+    
+    // Actualizar UI
+    actualizarModoImpresionUI(modo);
+    
+    // Mostrar confirmación
+    mostrarToast(
+        `Modo cambiado de <strong>${modoAnterior}</strong> a <strong>${modo}</strong><br>` +
+        `<small>Los próximos pedidos se imprimirán en modo ${modo}</small>`, 
+        'success'
+    );
+    
+    console.log(`🔄 Modo de impresión cambiado: ${modoAnterior} → ${modo}`);
+}
+
+// Función para cargar el modo de impresión actual
+function cargarModoImpresion() {
+    const modo = localStorage.getItem('modoImpresion') || 'ticket';
+    actualizarModoImpresionUI(modo);
+    console.log(`📋 Modo de impresión cargado: ${modo}`);
+}
+
+// Función para actualizar la UI según el modo
+function actualizarModoImpresionUI(modo) {
+    const displayElement = document.getElementById('modo-actual-display');
+    const btnTicket = document.getElementById('btn-modo-ticket');
+    const btnEtiqueta = document.getElementById('btn-modo-etiqueta');
+    
+    // Resetear botones
+    btnTicket.classList.remove('btn-warning', 'btn-primary');
+    btnTicket.classList.add('btn-outline-primary');
+    btnEtiqueta.classList.remove('btn-warning', 'btn-success');
+    btnEtiqueta.classList.add('btn-outline-success');
+    
+    if (modo === 'ticket') {
+        displayElement.innerHTML = '<span class="badge bg-primary"><i class="fas fa-receipt"></i> Modo Ticket</span>';
+        btnTicket.classList.remove('btn-outline-primary');
+        btnTicket.classList.add('btn-warning');
+    } else {
+        displayElement.innerHTML = '<span class="badge bg-success"><i class="fas fa-tags"></i> Modo Etiqueta</span>';
+        btnEtiqueta.classList.remove('btn-outline-success');
+        btnEtiqueta.classList.add('btn-warning');
+    }
+}
+
+// Variable para almacenar la balanza activa actual (para reintentos)
+let balanzaActivaId = null;
+
+// Función para probar impresora
+function probarImpresora(impresoraId) {
+    const btn = document.getElementById(`btn-test-imp-${impresoraId}`);
+    const textoOriginal = btn.innerHTML;
+    
+    console.log(`🖨️ Iniciando prueba de impresora: ${impresoraId}`);
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Imprimiendo...';
+    
+    fetch('/pos/configuracion/probar-impresora/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `impresora_id=${impresoraId}`
+    })
+    .then(response => {
+        console.log(`🖨️ Respuesta del servidor - Status: ${response.status}, OK: ${response.ok}`);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error(`❌ Respuesta de error del servidor:`, text);
+                throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}...`);
+            });
+        }
+        
+        // Verificar si la respuesta es JSON válido
+        const contentType = response.headers.get("content-type");
+        console.log(`🖨️ Content-Type de respuesta: ${contentType}`);
+        
+        if (!contentType || !contentType.includes("application/json")) {
+            return response.text().then(text => {
+                console.error(`❌ Respuesta no es JSON válido:`, text);
+                throw new Error(`Respuesta del servidor no es JSON válido. Contenido: ${text.substring(0, 100)}...`);
+            });
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log(`✅ Datos recibidos del servidor:`, data);
+        mostrarResultado(data.message, data.success);
+    })
+    .catch(error => {
+        console.error('❌ Error en probarImpresora:', error);
+        console.error('❌ Stack trace:', error.stack);
+        mostrarResultado('Error de conexión con la impresora: ' + error.message, false);
+    })
+    .finally(() => {
+        // Restaurar botón siempre
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        console.log(`🖨️ Prueba de impresora ${impresoraId} finalizada`);
+    });
+}
+
+// Función para probar balanza
+function probarBalanza(balanzaId) {
+    const btn = document.getElementById(`btn-test-bal-${balanzaId}`);
+    const textoOriginal = btn.innerHTML;
+    
+    console.log(`⚖️ Iniciando prueba de balanza: ${balanzaId}`);
+    
+    // Guardar el ID de la balanza para posibles reintentos
+    balanzaActivaId = balanzaId;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Probando...';
+    
+    // Mostrar modal de carga
+    const pesoModal = new bootstrap.Modal(document.getElementById('pesoBalanzaModal'));
+    const pesoContenido = document.getElementById('peso-contenido');
+    
+    // Resetear contenido del modal
+    pesoContenido.innerHTML = `
+        <div class="spinner-border text-success mb-3" role="status">
+            <span class="visually-hidden">Obteniendo peso...</span>
+        </div>
+        <p class="mb-0">Consultando peso de la balanza <strong>${balanzaId}</strong>...</p>
+    `;
+    
+    pesoModal.show();
+    
+    fetch('/pos/configuracion/probar-balanza/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: `balanza_id=${balanzaId}&comando=P`
+    })
+    .then(response => {
+        console.log(`⚖️ Respuesta del servidor - Status: ${response.status}, OK: ${response.ok}`);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error(`❌ Respuesta de error del servidor:`, text);
+                throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}...`);
+            });
+        }
+        
+        // Verificar si la respuesta es JSON válido
+        const contentType = response.headers.get("content-type");
+        console.log(`⚖️ Content-Type de respuesta: ${contentType}`);
+        
+        if (!contentType || !contentType.includes("application/json")) {
+            return response.text().then(text => {
+                console.error(`❌ Respuesta no es JSON válido:`, text);
+                throw new Error(`Respuesta del servidor no es JSON válido. Contenido: ${text.substring(0, 100)}...`);
+            });
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log(`✅ Datos recibidos del servidor:`, data);
+        if (data.success) {
+            // Manejar respuesta con peso numérico o respuesta cruda
+            let pesoDisplay;
+            if (data.peso !== undefined) {
+                // Formatear peso con 2 decimales
+                pesoDisplay = `${parseFloat(data.peso).toFixed(2)} kg`;
+                console.log(`⚖️ Peso obtenido: ${pesoDisplay}`);
+            } else if (data.respuesta) {
+                // Mostrar respuesta cruda si no hay peso parseado
+                pesoDisplay = data.respuesta;
+                console.log(`⚖️ Respuesta cruda de balanza: ${pesoDisplay}`);
+            } else {
+                pesoDisplay = 'Sin respuesta';
+                console.log(`⚠️ Sin respuesta de peso de la balanza`);
+            }
+            
+            pesoContenido.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                    <h3 class="text-success">Peso Obtenido</h3>
+                    <div class="card bg-light p-3 mb-3">
+                        <h1 class="display-4 mb-0 text-primary">${pesoDisplay}</h1>
+                    </div>
+                    <p class="text-muted mb-0">Balanza <strong>${balanzaId}</strong> respondió correctamente</p>
+                    <small class="text-muted">${data.message}</small>
+                </div>
+            `;
+        } else {
+            throw new Error(data.message || 'Error desconocido');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error en probarBalanza:', error);
+        console.error('❌ Stack trace:', error.stack);
+        pesoContenido.innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-danger fa-4x mb-3"></i>
+                <h4 class="text-danger">Error de Conexión</h4>
+                <div class="alert alert-danger">
+                    <strong>No se pudo obtener el peso:</strong><br>
+                    ${error.message}
+                </div>
+                <p class="text-muted mb-0">Verifica que la balanza esté encendida y conectada</p>
+            </div>
+        `;
+    })
+    .finally(() => {
+        // Restaurar botón siempre
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+        console.log(`⚖️ Prueba de balanza ${balanzaId} finalizada`);
+    });
+}
+
+// Función para reintentar obtener peso de la balanza activa
+function probarBalanzaActiva() {
+    if (balanzaActivaId) {
+        probarBalanza(balanzaActivaId);
+    }
+}
+
+// Función para mostrar resultados generales
+function mostrarResultado(mensaje, exito) {
+    const contenido = document.getElementById('resultado-contenido');
+    const icono = exito ? 'fa-check-circle text-success' : 'fa-exclamation-triangle text-danger';
+    
+    contenido.innerHTML = `
+        <div class="text-center">
+            <i class="fas ${icono} fa-3x mb-3"></i>
+            <p class="mb-0">${mensaje}</p>
+        </div>
+    `;
+    
+    // Usar Bootstrap 5 API nativo
+    const modalElement = document.getElementById('resultadoModal');
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Auto-cerrar después de 3 segundos si es exitoso
+    if (exito) {
+        setTimeout(() => {
+            modal.hide();
+        }, 3000);
+    }
+}
+</script>
+
+<!-- Modal para mostrar peso de balanza -->
+<div class="modal fade" id="pesoBalanzaModal" tabindex="-1" aria-labelledby="pesoBalanzaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="pesoBalanzaModalLabel">
+                    <i class="fas fa-weight-hanging"></i> Peso de la Balanza
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="peso-contenido">
+                    <div class="spinner-border text-success mb-3" role="status">
+                        <span class="visually-hidden">Obteniendo peso...</span>
+                    </div>
+                    <p class="mb-0">Obteniendo peso de la balanza...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success" onclick="probarBalanzaActiva()" id="btn-reintento-peso">
+                    <i class="fas fa-redo"></i> Obtener de Nuevo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts locales -->
+<script src="{% static 'jquery-3.6.4.js' %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+        </div> <!-- config-container -->
+    </div> <!-- container-fluid -->
+</body>
+</html>

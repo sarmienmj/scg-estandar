@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/media/logo.png">
+  <title>Menu POS</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #3e7b27 25%, #4a7c59 50%, #2d5016 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+
+    /* Barra superior mejorada */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(20px);
+      border-bottom: 3px solid #4a7c59;
+      box-shadow: 0 8px 25px rgba(45, 80, 22, 0.2);
+      padding: 15px 0;
+    }
+
+    .navbar-brand img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .navbar-brand img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+    }
+
+    .nav-badge {
+      background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      margin: 0 8px;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Fijar ancho del reloj para evitar cambios de formato */
+    #reloj-span {
+      font-family: 'Courier New', monospace;
+      display: inline-block;
+      min-width: 95px;
+      text-align: center;
+    }
+
+    .nav-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+      background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    }
+
+    .logout-btn {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+      background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+      color: white;
+      text-decoration: none;
+    }
+
+    /* Contenido principal */
+    .main-container {
+      padding: 80px 0;
+      min-height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .welcome-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 20px;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .welcome-subtitle {
+      font-size: 1.3rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 40px;
+      font-weight: 500;
+      animation: fadeInUp 1s ease-out 0.2s both;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Cards de menú: Grid adaptativo */
+    .menu-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .menu-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 25px;
+      padding: 40px 30px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 
+        0 20px 40px rgba(45, 80, 22, 0.2),
+        0 10px 25px rgba(45, 80, 22, 0.1);
+      transition: all 0.4s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      animation: slideInUp 0.8s ease-out;
+    }
+
+    .menu-card:nth-child(1) { animation-delay: 0.1s; }
+    .menu-card:nth-child(2) { animation-delay: 0.3s; }
+    .menu-card:nth-child(3) { animation-delay: 0.5s; }
+    .menu-card:nth-child(4) { animation-delay: 0.7s; }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .menu-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #4a7c59, #3e7b27, #2d5016);
+      border-radius: 25px 25px 0 0;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-15px) scale(1.05);
+      box-shadow: 
+        0 30px 60px rgba(45, 80, 22, 0.3),
+        0 15px 35px rgba(45, 80, 22, 0.2);
+      border-color: #4a7c59;
+    }
+
+    .menu-card:active {
+      transform: translateY(-10px) scale(1.02);
+    }
+
+    .card-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 25px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(45, 80, 22, 0.3);
+      transition: all 0.3s ease;
+      border: 3px solid #4a7c59;
+    }
+
+    .menu-card:hover .card-icon {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 12px 30px rgba(45, 80, 22, 0.4);
+      border-color: #3e7b27;
+    }
+
+    .card-icon i {
+      font-size: 2.5rem;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-icon img {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #2d5016;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-description {
+      font-size: 0.95rem;
+      color: #4a7c59;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .welcome-title { font-size: 2.5rem; }
+      .menu-cards {
+        grid-template-columns: 1fr; /* Stack en móviles */
+        max-width: 360px;
+        gap: 20px;
+        padding: 0 20px;
+      }
+      .menu-card { max-width: 100%; padding: 30px 25px; }
+      .navbar-nav { flex-direction: column; gap: 10px; }
+    }
+
+    /* Enhanced Responsive Design for Tablets and Mobile */
+    @media (max-width: 1024px) and (orientation: landscape) {
+      /* Horizontal Tablet Optimizations */
+      .navbar {
+        padding: 10px 0;
+      }
+      
+      .navbar-brand img {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .nav-badge {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        margin: 0 5px;
+      }
+      
+      .logout-btn {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+      }
+      
+      .main-container {
+        padding: 60px 0;
+        min-height: calc(100vh - 100px);
+      }
+      
+      .welcome-title {
+        font-size: 2.8rem;
+        margin-bottom: 15px;
+      }
+      
+      .welcome-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+      }
+      
+      .menu-cards {
+        gap: 25px;
+        max-width: 900px;
+      }
+      
+      .menu-card {
+        width: 220px;
+        padding: 30px 25px;
+      }
+      
+      .card-icon {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 20px;
+      }
+      
+      .card-icon i {
+        font-size: 2.2rem;
+      }
+      
+      .card-icon img {
+        width: 45px;
+        height: 45px;
+      }
+      
+      .card-title {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+      }
+      
+      .card-description {
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .navbar-nav { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px; }
+      .nav-badge { font-size: 0.85rem; padding: 8px 12px; }
+      .logout-btn { font-size: 0.85rem; padding: 8px 18px; }
+      .welcome-title { font-size: 3rem; }
+      .menu-cards { gap: 24px; max-width: 560px; }
+    }
+
+    @media (max-width: 768px) {
+      /* Medium tablet/mobile adjustments */
+      .container-fluid {
+        padding: 0 15px;
+      }
+      
+      .main-container {
+        padding: 60px 0;
+      }
+      
+      .welcome-title {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+      }
+      
+      .welcome-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 35px;
+        padding: 0 10px;
+      }
+      
+      .menu-cards {
+        gap: 20px;
+        padding: 0 15px;
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .menu-card {
+        width: 100%;
+        max-width: 320px;
+        padding: 35px 30px;
+      }
+      
+      .navbar-nav {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+      }
+      
+      .nav-badge, .logout-btn {
+        text-align: center;
+        width: 100%;
+        margin: 5px 0;
+      }
+      
+      /* Modal adjustments for tablets */
+      .modal-content {
+        margin: 20px;
+        border-radius: 15px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Small mobile optimizations */
+      .navbar {
+        padding: 8px 0;
+      }
+      
+      .navbar-brand img {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .nav-badge {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        border-radius: 20px;
+      }
+      
+      .logout-btn {
+        font-size: 0.8rem;
+        padding: 8px 15px;
+        border-radius: 20px;
+      }
+      
+      .main-container {
+        padding: 50px 0 30px;
+      }
+      
+      .welcome-title {
+        font-size: 2rem;
+        margin-bottom: 12px;
+      }
+      
+      .welcome-subtitle {
+        font-size: 1rem;
+        margin-bottom: 30px;
+        padding: 0 15px;
+      }
+      
+      .menu-cards {
+        gap: 15px;
+        padding: 0 20px;
+      }
+      
+      .menu-card {
+        max-width: 280px;
+        padding: 25px 20px;
+        border-radius: 20px;
+      }
+      
+      .card-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 15px;
+      }
+      
+      .card-icon i {
+        font-size: 2rem;
+      }
+      
+      .card-icon img {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .card-title {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+      }
+      
+      .card-description {
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+      
+      /* Better touch targets for mobile */
+      .menu-card {
+        min-height: 200px;
+        cursor: pointer;
+      }
+      
+      .menu-card:active {
+        transform: translateY(-5px) scale(0.98);
+      }
+    }
+
+    /* Portrait tablet specific adjustments */
+    @media (max-width: 768px) and (orientation: portrait) {
+      .main-container {
+        padding: 80px 0 40px;
+      }
+      
+      .welcome-section {
+        margin-bottom: 40px;
+      }
+      
+      .menu-cards {
+        gap: 25px;
+      }
+      
+      .menu-card {
+        max-width: 300px;
+      }
+    }
+
+    /* Efectos de partículas de fondo */
+    .background-effect {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 120px; height: 120px; left: 20%; animation-delay: 2s; }
+    .particle:nth-child(3) { width: 60px; height: 60px; left: 70%; animation-delay: 4s; }
+    .particle:nth-child(4) { width: 100px; height: 100px; left: 80%; animation-delay: 1s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+      50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+    }
+
+    /* Ocultar elementos en teléfonos en orientación vertical */
+    @media screen and (max-width: 768px) and (orientation: portrait) {
+      /* Ocultar tarjetas Vender y Créditos en móvil vertical */
+      #home-pos-boton {
+        display: none !important;
+      }
+      
+      /* Ajustar el contenedor para centrar mejor la tarjeta restante */
+      .menu-cards {
+        justify-content: center !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Efectos de fondo -->
+  <div class="background-effect">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <!-- Barra superior mejorada -->
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid">
+      <!-- Logo -->
+      <a class="navbar-brand" href="#">
+        <img src="/media/logo.png" alt="Logo SCG POS">
+      </a>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto me-auto mb-2 mb-lg-0 d-flex align-items-center">
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-clock me-2"></i>
+              <span id="reloj-span">--:--:--</span>
+            </span>
+          </li>
+          
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-calendar me-2"></i>
+              <span id="fecha-span">--/--/----</span>
+            </span>
+          </li>
+          
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-user me-2"></i>
+              <span>{{user.get_username}}</span>
+            </span>
+          </li>
+          {% endif %}
+        </ul>
+        
+        <a id="btn-cerrar-sesion" class="logout-btn">
+          <i class="fas fa-sign-out-alt me-2"></i>
+          Cerrar Sesión
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido principal -->
+  <div class="main-container">
+    <div class="container">
+      <!-- Sección de bienvenida -->
+      <div class="welcome-section">
+        <p class="welcome-subtitle">
+          {{ SUCURSAL }}
+        </p>
+      </div>
+
+      <!-- Cards de menú (grid 2x2: Vender | Pre Pesados / Administrar | Créditos) -->
+      <div class="menu-cards">
+        <!-- 1: Vender (arriba izquierda) -->
+        <div id="home-pos-boton" class="menu-card" style="order:1;">
+          <div class="card-icon">
+            <img src="/media/cajero.png" alt="Vender" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <h3 class="card-title">Vender</h3>
+          <p class="card-description">
+            Procesa ventas de productos, genera facturas y gestiona el punto de venta
+          </p>
+        </div>
+
+        <!-- 2: PRE PESADOS (arriba derecha) -->
+        <div id="home-prepesados-boton" class="menu-card" style="order:2;">
+          <div class="card-icon">
+            <img src="/media/balanza.png" alt="Pre Pesados" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <h3 class="card-title">PRE PESADOS</h3>
+          <p class="card-description">
+            Empaca Productos Pre Pesados
+          </p>
+        </div>
+
+        <!-- 3: Administrar (abajo izquierda) -->
+        <div id="home-menu-boton" class="menu-card" style="order:3;">
+          <div class="card-icon">
+            <img src="/media/analitica.png" alt="Administrar" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <h3 class="card-title">Administrar</h3>
+          <p class="card-description">
+            Revisa estadísticas, reportes de ventas y gestiona el inventario
+          </p>
+        </div>
+
+        <!-- 4: Créditos (abajo derecha) -->
+        <div id="home-prestamo-boton" class="menu-card" style="order:4;">
+          <div class="card-icon">
+            <img src="/media/prestamo.png" alt="Créditos" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <h3 class="card-title">Créditos</h3>
+          <p class="card-description">
+            Administra créditos a clientes y gestiona cuentas por cobrar
+          </p>
+        </div>
+        
+        <!-- 5: Configuración (nueva tarjeta) -->
+        <div id="home-configuracion-boton" class="menu-card" style="order:5;">
+          <div class="card-icon">
+            <i class="fas fa-cogs" style="font-size: 3rem; color: #4a7c59;"></i>
+          </div>
+          <h3 class="card-title">Configuración</h3>
+          <p class="card-description">
+            Gestiona impresoras y balanzas del sistema
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- URLs ocultas -->
+  <p id="url-pos" style="display: none;">{% url 'pos:pos' %}</p>
+  <p id="url-menu" style="display: none;">{% url 'pos:menu' %}</p>
+  <p id="url-creditos" style="display: none;">{% url 'pos:creditos' %}</p>
+  <p id="url-prepesados" style="display: none;">{% url 'pos:pre-pesados' %}</p>
+  <p id="url-configuracion" style="display: none;">{% url 'pos:configuracion-dispositivos' %}</p>
+  <p id="url-logout" style="display: none;">{% url 'login' %}</p>
+
+  <!-- Modal Confirmar Cerrar Sesión -->
+  <div class="modal fade" id="cerrarSesionModal" tabindex="-1" aria-labelledby="cerrarSesionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border: none; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div class="modal-header" style="background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%); color: white; border-radius: 20px 20px 0 0;">
+          <h5 class="modal-title" id="cerrarSesionModalLabel">
+            <i class="fas fa-sign-out-alt me-2"></i>
+            Confirmar Cierre de Sesión
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="padding: 30px; font-size: 1.1rem;">
+          ¿Está seguro que desea cerrar sesión?
+        </div>
+        <div class="modal-footer" style="border: none; padding: 20px 30px;">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 25px; padding: 10px 25px;">
+            <i class="fas fa-times me-2"></i>Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" id="confirmar-cerrar-sesion" style="border-radius: 25px; padding: 10px 25px; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); border: none;">
+            <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{% static 'jquery-3.6.4.js' %}"></script>
+  <script src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.js' %}"></script>  
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'home.js' %}"></script>
+
+  <script>
+    // Función para actualizar el reloj
+    function actualizarReloj() {
+      const ahora = new Date();
+      let horas = ahora.getHours();
+      const minutos = ahora.getMinutes().toString().padStart(2, '0');
+      const segundos = ahora.getSeconds().toString().padStart(2, '0');
+      
+      // Formato 12 horas consistente
+      const ampm = horas >= 12 ? 'PM' : 'AM';
+      horas = horas % 12;
+      horas = horas ? horas : 12; // La hora '0' debería ser '12'
+      const horasStr = horas.toString().padStart(2, '0');
+      
+      document.getElementById('reloj-span').textContent = `${horasStr}:${minutos}:${segundos} ${ampm}`;
+    }
+
+    // Función para actualizar la fecha
+    function actualizarFecha() {
+      const ahora = new Date();
+      const dia = ahora.getDate().toString().padStart(2, '0');
+      const mes = (ahora.getMonth() + 1).toString().padStart(2, '0');
+      const año = ahora.getFullYear();
+      
+      document.getElementById('fecha-span').textContent = `${dia}/${mes}/${año}`;
+    }
+
+    // Inicializar reloj y fecha
+    actualizarReloj();
+    actualizarFecha();
+    setInterval(actualizarReloj, 1000);
+
+    // Efectos hover adicionales para las cards
+    document.querySelectorAll('.menu-card').forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-15px) scale(1.05)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+  </script>
+</body>
+
+</html>

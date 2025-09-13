@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% load static %}
+  {% load filters %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/media/logo.png">
+  <title>Gestión de Créditos - SCG POS</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <style>
+    :root {
+      --primary-color: #001E62;
+      --secondary-color: #418FDE;
+      --success-color: #467012;
+      --success-hover: #527821;
+      --light-bg: #f8f9fa;
+      --border-color: #dee2e6;
+    }
+
+    body {
+      background-color: var(--light-bg);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .navbar {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .navbar-brand img {
+      border-radius: 8px;
+      transition: transform 0.2s;
+    }
+
+    .navbar-brand img:hover {
+      transform: scale(1.05);
+    }
+
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+
+    .nav-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-home-mobile {
+      display: none;
+      background: linear-gradient(135deg, var(--success-color), var(--success-hover));
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .btn-home-mobile:hover {
+      background: linear-gradient(135deg, var(--success-hover), var(--success-color));
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(70, 112, 18, 0.3);
+    }
+
+    .btn-historial {
+      background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .btn-historial:hover {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 30, 98, 0.3);
+    }
+
+    .btn-historial.btn-secondary {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+    }
+
+    .btn-historial.btn-secondary:hover {
+      background: linear-gradient(135deg, #5a6268, #6c757d);
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 20px rgba(0, 30, 98, 0.15);
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    .search-section {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .form-control {
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 0.2rem rgba(65, 143, 222, 0.25);
+    }
+
+    .btn-search {
+      background: linear-gradient(135deg, var(--success-color), var(--success-hover));
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-search:hover {
+      background: linear-gradient(135deg, var(--success-hover), var(--success-color));
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(70, 112, 18, 0.3);
+      color: white;
+    }
+
+    .btn-clear {
+      background: #6c757d;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .btn-clear:hover {
+      background: #5a6268;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .table {
+      margin: 0;
+    }
+
+    .table thead th {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border: none;
+      padding: 16px 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+    }
+
+    .table tbody tr {
+      transition: all 0.3s ease;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody tr:hover {
+      background-color: rgba(65, 143, 222, 0.05);
+      transform: scale(1.01);
+    }
+
+    .table tbody tr.table-success {
+      background-color: rgba(70, 112, 18, 0.1);
+      border-left: 4px solid var(--success-color);
+    }
+
+    .table tbody tr.table-warning {
+      background-color: rgba(255, 193, 7, 0.1);
+      border-left: 4px solid #ffc107;
+    }
+
+    .table tbody tr.table-success:hover {
+      background-color: rgba(70, 112, 18, 0.15);
+    }
+
+    .table tbody tr.table-warning:hover {
+      background-color: rgba(255, 193, 7, 0.15);
+    }
+
+    .table tbody td {
+      padding: 16px 12px;
+      vertical-align: middle;
+      border: none;
+    }
+
+    .btn-details {
+      background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .btn-details:hover {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 30, 98, 0.3);
+    }
+
+    .deuda-usd {
+      font-weight: 600;
+      color: var(--success-color);
+    }
+
+    .deuda-bs {
+      font-weight: 600;
+      color: #dc3545;
+    }
+
+    .deuda-pagada {
+      font-weight: 600;
+      color: var(--success-color);
+    }
+
+    .cliente-nombre {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .cliente-cedula {
+      font-family: 'Courier New', monospace;
+      background: var(--light-bg);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .cliente-telefono {
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+
+    .no-credits-message {
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      border-radius: 12px;
+      border: 2px dashed var(--success-color);
+    }
+
+    .no-credits-message h3 {
+      color: var(--success-color);
+      font-weight: 700;
+    }
+
+    .no-credits-message .alert {
+      background: linear-gradient(135deg, rgba(70, 112, 18, 0.1), rgba(82, 120, 33, 0.1));
+      border: 1px solid var(--success-color);
+      color: var(--success-color);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .btn-home-mobile {
+        display: inline-block;
+      }
+
+      .page-header .d-flex {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch !important;
+      }
+
+      .page-header h1 {
+        font-size: 2rem;
+        text-align: center;
+      }
+
+      .btn-historial {
+        text-align: center;
+        padding: 12px 20px;
+      }
+
+      .search-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .form-control {
+        margin-bottom: 10px;
+      }
+
+      .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .table thead {
+        display: none;
+      }
+
+      .table tbody tr {
+        display: block;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 15px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+
+      .table tbody td {
+        display: block;
+        text-align: left;
+        padding: 8px 0;
+        border: none;
+      }
+
+      .table tbody td:before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--primary-color);
+        min-width: 120px;
+        display: inline-block;
+      }
+
+      .btn-details {
+        display: block;
+        text-align: center;
+        margin-top: 10px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .main-container {
+        padding: 10px;
+      }
+
+      .page-header {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .search-section {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .page-header h1 {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #527821;">
+    <div class="container-fluid">
+      <!-- Logo -->
+      <a class="navbar-brand" href="#">
+        <img src="/media/logo.png" alt="Logo" width="70">
+      </a>
+
+      <!-- Mobile Home Button -->
+      <a href="{% url 'home' %}" class="btn-home-mobile">
+        🏠 Inicio
+      </a>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-5 me-auto mb-2 mb-lg-0">
+          <li id="reloj" class="nav-item ms-5"
+            style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius:4px;">
+            <span id="reloj-span" class="navbar-text" style="color:white">hh:mm:ss</span>
+          </li>
+          <li id="fecha" class="nav-item ms-5"
+            style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+            <span id="fecha-span" class="navbar-text" style="color:white">dd:mm:yy</span>
+          </li>
+          {% if user.is_authenticated %}
+          <li class="nav-item ms-5" style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+            <span class="navbar-text" style="color:white">{{user.get_username}}</span>
+          </li>
+          {% endif %}
+        </ul>
+        <a class="nav-link p-2" style="background-color: #467012; color: white; cursor: pointer; border-radius: 4px;" href="{% url 'home' %}">Volver</a>
+      </div>
+    </div>
+  </nav>
+
+      <div class="main-container">
+      <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1>📋 Gestión de Créditos</h1>
+          <div class="header-actions">
+            {% if mostrar_historial %}
+              <a href="{% url 'pos:creditos' %}" class="btn btn-primary btn-historial">
+                📊 Solo Pendientes
+              </a>
+            {% else %}
+              <a href="{% url 'pos:creditos' %}?historial=true" class="btn btn-secondary btn-historial">
+                📚 Ver Historial Completo
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Formulario de búsqueda -->
+      <div class="search-section">
+        <form method="get" action="{% url 'pos:creditos' %}" class="search-form">
+          <input type="text" name="cedula" class="form-control" placeholder="🔍 Buscar por cédula" value="{{ cedula_filtro }}">
+          <input type="text" name="nombre" class="form-control" placeholder="👤 Buscar por nombre" value="{{ nombre_filtro }}">
+          {% if mostrar_historial %}
+            <input type="hidden" name="historial" value="true">
+          {% endif %}
+          <button type="submit" class="btn btn-search">
+            🔍 Buscar
+          </button>
+          {% if cedula_filtro or nombre_filtro %}
+          <a href="{% url 'pos:creditos' %}{% if mostrar_historial %}?historial=true{% endif %}" class="btn-clear">
+            🗑️ Limpiar
+          </a>
+          {% endif %}
+        </form>
+      </div>
+    
+    <!-- Tabla de créditos -->
+    <div class="table-container">
+      {% if clientes %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">👤 Cliente</th>
+                <th scope="col">🆔 Cédula</th>
+                <th scope="col">📞 Teléfono</th>
+                <th scope="col">💵 Deuda USD</th>
+                <th scope="col">💸 Deuda Bs</th>
+                <th scope="col">⚙️ Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cliente in clientes %}
+              <tr {% if cliente.deuda_total == 0 %}class="table-success"{% elif cliente.deuda_total > 0 %}class="table-warning"{% endif %}>
+                <td data-label="Cliente" class="cliente-nombre">{{ cliente.nombre }}</td>
+                <td data-label="Cédula" class="cliente-cedula">{{ cliente.cedula }}</td>
+                <td data-label="Teléfono" class="cliente-telefono">{{ cliente.telefono }}</td>
+                <td data-label="Deuda USD" class="{% if cliente.deuda_total == 0 %}deuda-pagada{% elif cliente.deuda_total > 0 %}deuda-usd{% endif %}">
+                  ${{ cliente.deuda_total|floatformat:2 }}
+                </td>
+                <td data-label="Deuda Bs" class="{% if cliente.deuda_total == 0 %}deuda-pagada{% elif cliente.deuda_total > 0 %}deuda-bs{% endif %}">
+                  Bs. {{ cliente.deuda_total|multiplyby:dolar|floatformat:2 }}
+                </td>
+                <td data-label="Acciones">
+                  <a href="credito-detalles/{{cliente.id}}" class="btn-details">📋 Ver Detalles</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <!-- Mensaje cuando no hay clientes -->
+        <div class="no-credits-message">
+          <div class="text-center py-5">
+            <div class="mb-4">
+              {% if mostrar_historial %}
+                <i class="fas fa-info-circle" style="font-size: 4rem; color: var(--secondary-color);">📚</i>
+                <h3 class="text-info mb-3">No se encontraron clientes</h3>
+                <p class="text-muted mb-4">No hay clientes registrados en el sistema.</p>
+              {% else %}
+                <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--success-color);">✅</i>
+                <h3 class="text-success mb-3">¡Excelente! No tienes créditos pendientes</h3>
+                <p class="text-muted mb-4">Todos los clientes están al día con sus pagos.</p>
+                <div class="alert alert-success" role="alert">
+                  <strong>🎉 Estado actual:</strong> Todos los créditos han sido pagados completamente.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="{% static 'jquery-3.6.4.js' %}"></script>
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'credito.js' %}"></script>
+</body>
+
+</html>

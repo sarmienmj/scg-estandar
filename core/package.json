@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "jsprintmanager": "^6.0.0",
+    "onscan.js": "^1.5.2"
+  }
+}

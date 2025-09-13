@@ -1,0 +1,707 @@
+{% extends 'menu.html' %}
+{% load static %}
+{% load format_filters %}
+
+{% block title %}Reportes de Ventas - SCG POS{% endblock title %}
+
+{% block content %}
+{% csrf_token %}
+<style>
+    :root {
+        --primary-color: #001E62;
+        --secondary-color: #418FDE;
+    }
+</style>
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-0">📊 Reportes de Ventas</h1>
+            <p class="lead text-muted">Análisis detallado de las ventas del negocio</p>
+        </div>
+    </div>
+
+    <!-- Sistema de Pestañas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <ul class="nav nav-tabs card-header-tabs" id="ventasTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="total-tab" data-bs-toggle="tab" data-bs-target="#total" type="button" role="tab" aria-controls="total" aria-selected="true">
+                                📊 Ventas Totales
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="contado-tab" data-bs-toggle="tab" data-bs-target="#contado" type="button" role="tab" aria-controls="contado" aria-selected="false">
+                                💰 Pagados al Contado
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="credito-tab" data-bs-toggle="tab" data-bs-target="#credito" type="button" role="tab" aria-controls="credito" aria-selected="false">
+                                💳 Pagados con Crédito
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="ventasTabsContent">
+                        <!-- Pestaña: Ventas Totales -->
+                        <div class="tab-pane fade show active" id="total" role="tabpanel" aria-labelledby="total-tab">
+                            <div class="row">
+                                <!-- Ventas Hoy -->
+        <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm border-primary">
+                <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                                                    <h6 class="card-title text-muted mb-1">💰 Ventas Hoy</h6>
+                                                    <h2 class="mb-0 text-primary">{{ ventas_hoy.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_hoy.cantidad_pedidos }} pedidos</small>
+                        </div>
+                        <div class="text-right">
+                                                    <div class="badge bg-primary mb-1">Hoy</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong class="text-primary">{{ ventas_hoy.promedio_ticket|format_currency }}</strong>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                        </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_hoy.fecha_inicio|date:"d/m/Y" }} - {{ ventas_hoy.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                                <!-- Ventas Últimos 7 Días -->
+        <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm border-success">
+                <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                                                    <h6 class="card-title text-muted mb-1">📈 Últimos 7 Días</h6>
+                                                    <h2 class="mb-0 text-success">{{ ventas_7_dias.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_7_dias.cantidad_pedidos }} pedidos</small>
+                        </div>
+                        <div class="text-right">
+                                                    <div class="badge bg-success mb-1">7 días</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong class="text-success">{{ ventas_7_dias.promedio_ticket|format_currency }}</strong>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                        </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_7_dias.fecha_inicio|date:"d/m/Y" }} - {{ ventas_7_dias.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                                <!-- Ventas Últimos 30 Días -->
+        <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm border-warning">
+                <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                                                    <h6 class="card-title text-muted mb-1">📊 Últimos 30 Días</h6>
+                                                    <h2 class="mb-0 text-warning">{{ ventas_30_dias.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_30_dias.cantidad_pedidos }} pedidos</small>
+                        </div>
+                        <div class="text-right">
+                                                    <div class="badge bg-warning text-dark mb-1">30 días</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong class="text-warning">{{ ventas_30_dias.promedio_ticket|format_currency }}</strong>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
+                        </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_30_dias.fecha_inicio|date:"d/m/Y" }} - {{ ventas_30_dias.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                        <!-- Pestaña: Pagados al Contado -->
+                        <div class="tab-pane fade" id="contado" role="tabpanel" aria-labelledby="contado-tab">
+                            <div class="row">
+                                <!-- Ventas Contado Hoy -->
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm" style="border-color: #198754;">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title text-muted mb-1">💰 Contado Hoy</h6>
+                                                    <h2 class="mb-0" style="color: #198754;">{{ ventas_contado_hoy.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_contado_hoy.cantidad_pedidos }} pedidos</small>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="badge mb-1" style="background-color: #198754; color: white;">Hoy</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong style="color: #198754;">{{ ventas_contado_hoy.promedio_ticket|format_currency }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress" style="height: 5px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #198754;"></div>
+                                                </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_contado_hoy.fecha_inicio|date:"d/m/Y" }} - {{ ventas_contado_hoy.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                 </div>
+
+                                <!-- Ventas Contado 7 Días -->
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm" style="border-color: #198754;">
+                 <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title text-muted mb-1">📈 Contado 7 Días</h6>
+                                                    <h2 class="mb-0" style="color: #198754;">{{ ventas_contado_7_dias.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_contado_7_dias.cantidad_pedidos }} pedidos</small>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="badge mb-1" style="background-color: #198754; color: white;">7 días</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong style="color: #198754;">{{ ventas_contado_7_dias.promedio_ticket|format_currency }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress" style="height: 5px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #198754;"></div>
+                                                </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_contado_7_dias.fecha_inicio|date:"d/m/Y" }} - {{ ventas_contado_7_dias.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                 </div>
+             </div>
+         </div>
+
+                                <!-- Ventas Contado 30 Días -->
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm" style="border-color: #198754;">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title text-muted mb-1">📊 Contado 30 Días</h6>
+                                                    <h2 class="mb-0" style="color: #198754;">{{ ventas_contado_30_dias.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_contado_30_dias.cantidad_pedidos }} pedidos</small>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="badge mb-1" style="background-color: #198754; color: white;">30 días</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong style="color: #198754;">{{ ventas_contado_30_dias.promedio_ticket|format_currency }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress" style="height: 5px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #198754;"></div>
+                                                </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_contado_30_dias.fecha_inicio|date:"d/m/Y" }} - {{ ventas_contado_30_dias.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                 </div>
+                 </div>
+             </div>
+         </div>
+
+                        <!-- Pestaña: Pagados con Crédito -->
+                        <div class="tab-pane fade" id="credito" role="tabpanel" aria-labelledby="credito-tab">
+                            <div class="row">
+                                <!-- Ventas Crédito Hoy -->
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm" style="border-color: #418FDE;">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title text-muted mb-1">💳 Crédito Hoy</h6>
+                                                    <h2 class="mb-0" style="color: #418FDE;">{{ ventas_credito_hoy.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_credito_hoy.cantidad_pedidos }} pedidos</small>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="badge mb-1" style="background-color: #418FDE; color: white;">Hoy</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong style="color: #418FDE;">{{ ventas_credito_hoy.promedio_ticket|format_currency }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress" style="height: 5px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #418FDE;"></div>
+                 </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_credito_hoy.fecha_inicio|date:"d/m/Y" }} - {{ ventas_credito_hoy.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                 </div>
+             </div>
+         </div>
+     </div>
+
+                                <!-- Ventas Crédito 7 Días -->
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm" style="border-color: #418FDE;">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title text-muted mb-1">📈 Crédito 7 Días</h6>
+                                                    <h2 class="mb-0" style="color: #418FDE;">{{ ventas_credito_7_dias.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_credito_7_dias.cantidad_pedidos }} pedidos</small>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="badge mb-1" style="background-color: #418FDE; color: white;">7 días</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong style="color: #418FDE;">{{ ventas_credito_7_dias.promedio_ticket|format_currency }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress" style="height: 5px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #418FDE;"></div>
+                                                </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_credito_7_dias.fecha_inicio|date:"d/m/Y" }} - {{ ventas_credito_7_dias.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                            <!-- Información de abonos -->
+                                            {% if ventas_credito_7_dias.total_abonado > 0 %}
+                                            <div class="mt-3 pt-2 border-top">
+                                                <div class="row text-center">
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Crédito Total</small>
+                                                        <strong style="color: #418FDE;">{{ ventas_credito_7_dias.total_ventas|format_currency }}</strong>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Abonado</small>
+                                                        <strong class="text-success">{{ ventas_credito_7_dias.total_abonado|format_currency }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <small class="text-muted">
+                                                        Pendiente: {{ ventas_credito_7_dias.total_ventas|subtract:ventas_credito_7_dias.total_abonado|format_currency }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ventas Crédito 30 Días -->
+                                <div class="col-lg-4 col-md-6 mb-3">
+                                    <div class="card h-100 shadow-sm" style="border-color: #418FDE;">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title text-muted mb-1">📊 Crédito 30 Días</h6>
+                                                    <h2 class="mb-0" style="color: #418FDE;">{{ ventas_credito_30_dias.total_ventas|format_currency }}</h2>
+                                                    <small class="text-muted">{{ ventas_credito_30_dias.cantidad_pedidos }} pedidos</small>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="badge mb-1" style="background-color: #418FDE; color: white;">30 días</div>
+                                                    <br>
+                                                    <small class="text-muted">Ticket promedio</small>
+                                                    <br>
+                                                    <strong style="color: #418FDE;">{{ ventas_credito_30_dias.promedio_ticket|format_currency }}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="progress" style="height: 5px;">
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #418FDE;"></div>
+                                                </div>
+                                                <small class="text-muted mt-1">
+                                                    {{ ventas_credito_30_dias.fecha_inicio|date:"d/m/Y" }} - {{ ventas_credito_30_dias.fecha_fin|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                            <!-- Información de abonos -->
+                                            {% if ventas_credito_30_dias.total_abonado > 0 %}
+                                            <div class="mt-3 pt-2 border-top">
+                                                <div class="row text-center">
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Crédito Total</small>
+                                                        <strong style="color: #418FDE;">{{ ventas_credito_30_dias.total_ventas|format_currency }}</strong>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted d-block">Abonado</small>
+                                                        <strong class="text-success">{{ ventas_credito_30_dias.total_abonado|format_currency }}</strong>
+                                                    </div>
+                </div>
+                                                <div class="mt-2">
+                                                    <small class="text-muted">
+                                                        Pendiente: {{ ventas_credito_30_dias.total_ventas|subtract:ventas_credito_30_dias.total_abonado|format_currency }}
+                                                    </small>
+                            </div>
+                        </div>
+                                            {% endif %}
+                                        </div>
+                            </div>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Gráficos con Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">📊 Gráficos de Ventas</h4>
+                    <p class="text-muted mb-0">Análisis visual de las ventas con filtros de fecha</p>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros de Fecha -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">🔍 Filtros de Fecha</h5>
+                            
+                            <!-- Botones de filtros predefinidos -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="btn-group-vertical btn-group-sm d-md-none" role="group" aria-label="Filtros de fecha predefinidos">
+                                        <button type="button" class="btn btn-outline-primary mb-1" data-date-filter="7days">
+                                            📅 Últimos 7 días
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary mb-1" data-date-filter="30days">
+                                            📅 Últimos 30 días
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary mb-1" data-date-filter="90days">
+                                            📅 Últimos 90 días
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary mb-1" data-date-filter="year">
+                                            📅 Año Actual
+                                        </button>
+                                    </div>
+                                    <div class="btn-group d-none d-md-flex" role="group" aria-label="Filtros de fecha predefinidos">
+                                        <button type="button" class="btn btn-outline-primary" data-date-filter="7days">
+                                            📅 Últimos 7 días
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" data-date-filter="30days">
+                                            📅 Últimos 30 días
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" data-date-filter="90days">
+                                            📅 Últimos 90 días
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" data-date-filter="year">
+                                            📅 Año Actual
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Date Range Picker personalizado -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="startDate" class="form-label">Fecha de inicio</label>
+                                    <input type="date" class="form-control custom-date-input" id="startDate" name="startDate">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="endDate" class="form-label">Fecha de fin</label>
+                                    <input type="date" class="form-control custom-date-input" id="endDate" name="endDate">
+                                </div>
+                            </div>
+
+                            <!-- Filtros de tipo de venta -->
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="btn-group-vertical btn-group-sm d-md-none" role="group" aria-label="Tipo de venta">
+                                        <button type="button" class="btn btn-outline-success mb-1 active" onclick="window.ventasCharts.changeVentasType('total')">
+                                            💰 Ventas Totales
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success mb-1" onclick="window.ventasCharts.changeVentasType('contado')">
+                                            💵 Solo Contado
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success mb-1" onclick="window.ventasCharts.changeVentasType('credito')">
+                                            💳 Solo Crédito
+                                        </button>
+                                    </div>
+                                    <div class="btn-group d-none d-md-flex" role="group" aria-label="Tipo de venta">
+                                        <button type="button" class="btn btn-outline-success active" onclick="window.ventasCharts.changeVentasType('total')">
+                                            💰 Ventas Totales
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success" onclick="window.ventasCharts.changeVentasType('contado')">
+                                            💵 Solo Contado
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success" onclick="window.ventasCharts.changeVentasType('credito')">
+                                            💳 Solo Crédito
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Filtros de agrupación temporal -->
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label class="form-label">📊 Agrupar por:</label>
+                                    <div class="btn-group-vertical btn-group-sm d-md-none" role="group" aria-label="Agrupación temporal">
+                                        <button type="button" class="btn btn-outline-primary mb-1 active" onclick="window.ventasCharts.changeGrouping('day')">
+                                            📅 Día
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary mb-1" onclick="window.ventasCharts.changeGrouping('week')">
+                                            📆 Semana
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary mb-1" onclick="window.ventasCharts.changeGrouping('month')">
+                                            📅 Mes
+                                        </button>
+                                    </div>
+                                    <div class="btn-group d-none d-md-flex" role="group" aria-label="Agrupación temporal">
+                                        <button type="button" class="btn btn-outline-primary active" onclick="window.ventasCharts.changeGrouping('day')">
+                                            📅 Día
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="window.ventasCharts.changeGrouping('week')">
+                                            📆 Semana
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="window.ventasCharts.changeGrouping('month')">
+                                            📅 Mes
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor de Gráficos -->
+                    <div class="row" id="ventasChartsContainer">
+                        <!-- Los gráficos se cargarán dinámicamente aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+    transition: transform 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+.progress {
+    background-color: #f8f9fa;
+}
+    
+    .badge {
+        font-size: 0.75rem;
+    }
+
+    /* Estilos para los gráficos */
+    .btn-group .btn.active {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-group .btn:hover {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+        color: white;
+    }
+
+    #ventasChartsContainer canvas {
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 30, 98, 0.1);
+    }
+
+    /* Optimización para móviles */
+    @media (max-width: 767.98px) {
+        #ventasChartsContainer canvas {
+            max-height: 300px; /* Altura reducida en móviles */
+        }
+        
+        #ventasChartsContainer .card-body {
+            padding: 0.5rem; /* Padding más reducido */
+        }
+        
+        #ventasChartsContainer .card-header {
+            padding: 0.5rem; /* Padding más reducido */
+        }
+        
+        #ventasChartsContainer .card-header h5 {
+            font-size: 0.9rem; /* Título más pequeño */
+        }
+        
+        /* Reducir márgenes laterales en móviles */
+        .container-fluid {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        
+        .row {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        
+        .col-12 {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        
+        /* Reducir padding de las cards en móviles */
+        .card {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-body {
+            padding: 0.5rem;
+        }
+        
+        .card-header {
+            padding: 0.5rem;
+        }
+    }
+
+    /* Estilos para el contenedor del gráfico */
+    #ventasChartsContainer .card {
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 30, 98, 0.1);
+        border-radius: 12px;
+    }
+
+    #ventasChartsContainer .card-header {
+        background: linear-gradient(135deg, #001E62 0%, #418FDE 100%);
+        color: white;
+        border-radius: 12px 12px 0 0 !important;
+        border: none;
+    }
+
+    #ventasChartsContainer .card-header h5 {
+        color: white;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    /* Estilos para los filtros de fecha */
+    .btn-group .btn {
+        transition: all 0.3s ease;
+    }
+
+    .btn-group .btn.active {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0, 30, 98, 0.3);
+    }
+
+    /* Estilos para el contenedor de gráficos */
+    .card-header h4 {
+        color: var(--primary-color);
+    }
+
+    /* Estilos para los inputs de fecha */
+    .custom-date-input:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.2rem rgba(65, 143, 222, 0.25);
+    }
+
+    /* Estilos responsive */
+    @media (max-width: 767.98px) {
+        .btn-group-vertical .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-group-vertical .btn:last-child {
+            margin-bottom: 0;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-header {
+            padding: 1rem;
+        }
+        
+        h4 {
+            font-size: 1.25rem;
+        }
+        
+        h5 {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* Prevenir overflow horizontal */
+    .container-fluid {
+        overflow-x: hidden;
+    }
+    
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .col-12, .col-md-6 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* Optimización adicional para pantallas muy pequeñas */
+    @media (max-width: 575.98px) {
+        .container-fluid {
+            padding-left: 0.125rem;
+            padding-right: 0.125rem;
+        }
+        
+        .col-12 {
+            padding-left: 0.125rem;
+            padding-right: 0.125rem;
+        }
+        
+        .card-body {
+            padding: 0.375rem;
+        }
+        
+        .card-header {
+            padding: 0.375rem;
+        }
+        
+        #ventasChartsContainer canvas {
+            max-height: 250px; /* Altura aún más reducida para pantallas muy pequeñas */
+        }
+    }
+</style>
+
+<!-- Scripts para los gráficos -->
+<script src="{% static 'libs/chart.js' %}"></script>
+<script src="{% static 'ventas_charts.js' %}"></script>
+<script src="{% static 'test_api.js' %}"></script>
+
+{% endblock %}

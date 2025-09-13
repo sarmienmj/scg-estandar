@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Administración - SCG POS{% endblock title %}</title>
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <link rel="icon" type="image/x-icon" href="/media/logo.png">
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <link rel="stylesheet" src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.css' %}">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2d5016 0%, #3e7b27 25%, #4a7c59 50%, #2d5016 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+
+    /* Barra superior moderna */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95) !important;
+      backdrop-filter: blur(20px);
+      border-bottom: 3px solid #4a7c59;
+      box-shadow: 0 8px 25px rgba(45, 80, 22, 0.2);
+      padding: 15px 0;
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+      width: 100%;
+    }
+
+    .navbar-brand img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .navbar-brand img:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+    }
+
+    .nav-badge {
+      background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      margin: 0 8px;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+      background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 12px 25px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+      background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+      color: white;
+      text-decoration: none;
+    }
+
+    /* Botón de engranajes para toggle del sidebar */
+    .gear-toggle {
+      background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      margin-left: 10px;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gear-toggle:hover {
+      transform: translateY(-2px) rotate(90deg);
+      box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+      background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    }
+
+    .gear-toggle:active {
+      transform: translateY(0) rotate(90deg);
+    }
+
+    /* Contenedor principal */
+    .main-container {
+      margin-top: 100px;
+      min-height: calc(100vh - 100px);
+    }
+
+    /* Barra lateral moderna - Overlay approach */
+    .sidebar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-right: 3px solid #4a7c59;
+      box-shadow: 8px 0 25px rgba(45, 80, 22, 0.2);
+      height: calc(100vh - 100px);
+      position: fixed;
+      top: 100px;
+      left: 0;
+      width: 250px;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      z-index: 1000;
+      transform: translateX(0);
+    }
+
+    /* Estados del sidebar */
+    .sidebar.collapsed {
+      width: 4px; /* Very thin, almost hidden */
+      border-right: 2px solid #4a7c59;
+    }
+
+    .sidebar.collapsed .sidebar-header {
+      opacity: 0;
+      overflow: hidden;
+      height: 0;
+      padding: 0;
+    }
+
+    .sidebar.collapsed .sidebar-header span {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    .sidebar.collapsed .sidebar-header i {
+      opacity: 0;
+    }
+
+    .sidebar.collapsed .sidebar-menu {
+      opacity: 0;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .sidebar.collapsed .menu-text {
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed .menu-item {
+      margin: 0;
+      opacity: 0;
+    }
+
+    .sidebar.collapsed .menu-link {
+      padding: 0;
+      justify-content: center;
+      opacity: 0;
+    }
+
+    .sidebar.collapsed .menu-link i {
+      margin-right: 0;
+      opacity: 0;
+    }
+
+    /* Hover effect for collapsed sidebar */
+    .sidebar.collapsed:hover {
+      width: 60px;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed:hover .sidebar-header {
+      height: auto;
+      padding: 10px 5px;
+      opacity: 1;
+      font-size: 0px; /* Hide text but show icons */
+    }
+
+    .sidebar.collapsed:hover .sidebar-header i {
+      opacity: 1;
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    .sidebar.collapsed:hover .sidebar-menu {
+      opacity: 1;
+      padding: 10px 0;
+    }
+
+    .sidebar.collapsed:hover .menu-item {
+      margin: 4px 5px;
+      opacity: 1;
+    }
+
+    .sidebar.collapsed:hover .menu-link {
+      padding: 10px 5px;
+      opacity: 1;
+    }
+
+    .sidebar.collapsed:hover .menu-link i {
+      opacity: 1;
+      font-size: 1rem;
+    }
+
+    /* Tooltips for collapsed sidebar */
+    .sidebar.collapsed .menu-link {
+      position: relative;
+    }
+
+    .sidebar.collapsed:hover .menu-link:hover::after {
+      content: attr(title);
+      position: absolute;
+      left: 65px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #2d5016;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      opacity: 1;
+      pointer-events: none;
+    }
+
+    .sidebar.collapsed:hover .menu-link:hover::before {
+      content: '';
+      position: absolute;
+      left: 60px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 6px solid transparent;
+      border-right-color: #2d5016;
+      z-index: 1000;
+      opacity: 1;
+      pointer-events: none;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 10px;
+      right: -15px;
+      background: #4a7c59;
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(45, 80, 22, 0.3);
+    }
+
+    .sidebar-toggle:hover {
+      background: #3e7b27;
+      transform: scale(1.1);
+    }
+
+    /* Botón para mostrar/ocultar sidebar */
+    .sidebar-show-btn {
+      position: fixed;
+      top: 110px;
+      left: 15px;
+      background: #4a7c59;
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      z-index: 999;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.8);
+    }
+
+    .sidebar-show-btn.show {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+
+    .sidebar-show-btn:hover {
+      background: #3e7b27;
+      transform: scale(1.1);
+    }
+
+    .sidebar-header {
+      background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+      color: white;
+      padding: 25px 20px;
+      margin: 0;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar-header i {
+      margin-right: 10px;
+      font-size: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-header span {
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu {
+      padding: 20px 0;
+      height: calc(100% - 100px);
+      overflow-y: auto;
+    }
+
+    .menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .menu-item {
+      margin: 8px 15px;
+      border-radius: 15px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.5);
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .menu-item:hover {
+      background: rgba(74, 124, 89, 0.1);
+      border-color: #4a7c59;
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.2);
+    }
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      color: #2d5016;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .menu-link:hover {
+      color: #3e7b27;
+      text-decoration: none;
+    }
+
+    .menu-link i {
+      margin-right: 12px;
+      font-size: 1.2rem;
+      width: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .menu-text {
+      transition: all 0.3s ease;
+    }
+
+    .menu-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .menu-item:hover .menu-link::before {
+      transform: scaleY(1);
+    }
+
+    /* Contenido principal - ahora ocupa todo el ancho */
+    .main-content {
+      width: 100%;
+      min-height: calc(100vh - 100px);
+      margin-top: 100px;
+      transition: all 0.3s ease;
+    }
+
+    .content-area {
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      margin: 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: 
+        0 20px 40px rgba(45, 80, 22, 0.1),
+        0 10px 25px rgba(45, 80, 22, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      min-height: calc(100vh - 200px);
+    }
+
+    .content-header {
+      background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+      color: white;
+      padding: 20px 30px;
+      margin: -30px -30px 30px -30px;
+      border-radius: 20px 20px 0 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+    }
+
+    .content-header i {
+      margin-right: 15px;
+      font-size: 1.8rem;
+    }
+
+    /* Efectos de partículas de fondo */
+    .background-effect {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .particle:nth-child(1) { width: 60px; height: 60px; left: 5%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 80px; height: 80px; left: 15%; animation-delay: 2s; }
+    .particle:nth-child(3) { width: 40px; height: 40px; left: 75%; animation-delay: 4s; }
+    .particle:nth-child(4) { width: 70px; height: 70px; left: 85%; animation-delay: 1s; }
+    .particle:nth-child(5) { width: 50px; height: 50px; left: 45%; animation-delay: 3s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+      50% { transform: translateY(-30px) rotate(180deg); opacity: 0.7; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      /* Medium tablet/mobile adjustments */
+      .container-fluid {
+        padding: 0 15px;
+      }
+      
+      .sidebar {
+        height: 100vh;
+        top: 0;
+        width: 280px !important;
+      }
+      
+      .sidebar.collapsed {
+        width: 280px !important;
+      }
+      
+      .sidebar-toggle {
+        display: none !important;
+      }
+      
+      .sidebar-header {
+        padding-top: 100px;
+      }
+      
+      .main-container {
+        margin-top: 70px;
+      }
+      
+      .main-content {
+        margin-top: 70px;
+      }
+      
+      .content-area {
+        margin: 10px;
+        padding: 20px;
+        min-height: auto;
+      }
+      
+      .content-header {
+        font-size: 1.2rem;
+        padding: 15px 20px;
+        margin: -20px -20px 20px -20px;
+      }
+      
+      .navbar-nav {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+      }
+      
+      .nav-badge, .back-btn {
+        text-align: center;
+        width: 100%;
+        margin: 5px 0;
+      }
+      
+      .menu-toggle {
+        display: block;
+        background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .menu-toggle:hover {
+        background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+      }
+    }
+
+    @media (min-width: 769px) {
+      /* Desktop: Show sidebar toggle button */
+      .menu-toggle {
+        display: none;
+      }
+      
+      .sidebar-toggle {
+        display: flex !important;
+      }
+      
+      .sidebar-overlay {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .menu-link span {
+        font-size: 0.9rem;
+      }
+      
+      .sidebar-header {
+        font-size: 1.1rem;
+        padding: 20px 15px;
+      }
+    }
+
+    /* Enhanced Responsive Design for Tablets and Mobile */
+    @media (max-width: 1024px) and (orientation: landscape) {
+      /* Horizontal Tablet Optimizations */
+      .navbar {
+        padding: 10px 0;
+      }
+      
+      .navbar-brand img {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .nav-badge {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        margin: 0 5px;
+      }
+      
+      .back-btn {
+        padding: 8px 20px;
+        font-size: 0.9rem;
+      }
+      
+      .main-container {
+        margin-top: 80px;
+      }
+      
+      .sidebar {
+        min-height: calc(100vh - 80px);
+        top: 80px;
+      }
+      
+      .sidebar-header {
+        padding: 20px 15px;
+        font-size: 1.2rem;
+      }
+      
+      .menu-link {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+      }
+      
+      .menu-link i {
+        font-size: 1.1rem;
+      }
+      
+      .content-area {
+        min-height: calc(100vh - 160px);
+        margin: 15px;
+        padding: 25px;
+      }
+      
+      .content-header {
+        font-size: 1.3rem;
+        padding: 15px 25px;
+      }
+    }
+
+    @media (max-width: 992px) {
+      /* Large tablet/small desktop adjustments */
+      .navbar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+      }
+      
+      .nav-badge {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+      }
+      
+      .back-btn {
+        font-size: 0.85rem;
+        padding: 8px 18px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      /* Small mobile optimizations */
+      .navbar {
+        padding: 8px 0;
+      }
+      
+      .navbar-brand img {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .nav-badge {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+      }
+      
+      .back-btn {
+        font-size: 0.8rem;
+        padding: 8px 15px;
+      }
+      
+      .gear-toggle {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+        padding: 8px;
+        margin-left: 8px;
+      }
+      
+      .main-container {
+        margin-top: 60px;
+      }
+      
+      .content-area {
+        margin: 5px;
+        padding: 15px;
+        border-radius: 15px;
+      }
+      
+      .content-header {
+        font-size: 1rem;
+        padding: 12px 15px;
+        margin: -15px -15px 15px -15px;
+      }
+      
+      .menu-link {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+      }
+      
+      .menu-link i {
+        font-size: 1rem;
+        margin-right: 10px;
+      }
+      
+      .sidebar-header {
+        font-size: 1rem;
+        padding: 15px 15px;
+      }
+    }
+
+    /* Menu toggle button (hidden by default) */
+    .menu-toggle {
+      display: none;
+    }
+
+    /* Overlay para cerrar sidebar en mobile */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Ocultar elementos específicos del menú en teléfonos en orientación vertical */
+    @media screen and (max-width: 768px) and (orientation: portrait) {
+      /* Ocultar algunos elementos del menú para simplificar la vista móvil */
+      .menu-item:nth-child(4),  /* Clientes */
+      .menu-item:nth-child(5)   /* Usuarios */ {
+        display: none !important;
+      }
+      
+      /* Asegurar que estos elementos permanezcan visibles */
+      .menu-item:nth-child(1),  /* Productos */
+      .menu-item:nth-child(2),  /* Categorías */
+      .menu-item:nth-child(3),  /* Pedidos */
+      .menu-item:nth-child(6),  /* Ventas */
+      .menu-item:nth-child(7),  /* Analíticas Productos */
+      .menu-item:nth-child(8),  /* Valor Dólar */
+      .menu-item:nth-child(9),  /* Configuración */
+      .menu-item:nth-child(10), /* Pagos Móviles */
+      .menu-item:nth-child(11)  /* Cierres de Caja */ {
+        display: block !important;
+      }
+    }
+
+    /* Ocultar el botón de engranajes en móviles */
+    @media (max-width: 768px) {
+      .gear-toggle {
+        display: none !important;
+      }
+      
+      /* Botón de home para móviles */
+      .mobile-home-btn {
+        display: block;
+        background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-left: 10px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .mobile-home-btn:hover {
+        background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+      }
+    }
+    
+    @media (min-width: 769px) {
+      .mobile-home-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Efectos de fondo -->
+  <div class="background-effect">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <!-- Barra superior moderna -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <!-- Logo -->
+      <a class="navbar-brand" href="#">
+        <img src="/media/logo.png" alt="Logo SCG POS">
+      </a>
+
+      <!-- Mobile menu toggle button -->
+      <button class="menu-toggle d-md-none" type="button" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <!-- Mobile home button -->
+      <a href="{% url 'pos:home' %}" class="mobile-home-btn d-md-none">
+        <i class="fas fa-home"></i>
+        <span>Inicio</span>
+      </a>
+
+      <!-- Gear icon for sidebar toggle -->
+      <button class="gear-toggle" type="button" onclick="toggleSidebarFromGear()" title="Abrir/Cerrar Menú">
+        <i class="fas fa-cogs"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto me-auto mb-2 mb-lg-0 d-flex align-items-center">
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-clock me-2"></i>
+              <span id="reloj-span">--:--:--</span>
+            </span>
+          </li>
+          
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-calendar me-2"></i>
+              <span id="fecha-span">--/--/----</span>
+            </span>
+          </li>
+          
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-user me-2"></i>
+              <span>{{user.get_username}}</span>
+            </span>
+          </li>
+          {% endif %}
+        </ul>
+        
+        <a href="{% url 'pos:home' %}" class="back-btn">
+          <i class="fas fa-arrow-left me-2"></i>
+          Volver al Inicio
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido principal -->
+  <div class="main-container">
+    <!-- Overlay para cerrar sidebar en mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="hideSidebar()"></div>
+    
+    <!-- Botón para mostrar sidebar cuando está oculto -->
+    <button class="sidebar-show-btn" id="sidebar-show-btn" onclick="showSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Barra lateral moderna (Overlay) -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <i class="fas fa-cogs"></i>
+        <span>Administrar</span>
+      </div>
+      
+      <div class="sidebar-menu">
+        <ul class="menu-list">
+          <li class="menu-item">
+            <a href="{% url 'pos:productos' %}" class="menu-link" title="Productos">
+              <i class="fas fa-box"></i>
+              <span class="menu-text">Productos</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:categorias' %}" class="menu-link" title="Categorías">
+              <i class="fas fa-tags"></i>
+              <span class="menu-text">Categorías</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:pedidos' %}" class="menu-link" title="Pedidos">
+              <i class="fas fa-shopping-cart"></i>
+              <span class="menu-text">Pedidos</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:cliente' %}" class="menu-link" title="Clientes">
+              <i class="fas fa-users"></i>
+              <span class="menu-text">Clientes</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:usuarios' %}" class="menu-link" title="Usuarios">
+              <i class="fas fa-user-friends"></i>
+              <span class="menu-text">Usuarios</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:ventas' %}" class="menu-link" title="Ventas">
+              <i class="fas fa-chart-line"></i>
+              <span class="menu-text">Ventas</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:productos-analytics' %}" class="menu-link" title="Analíticas de Productos">
+              <i class="fas fa-chart-bar"></i>
+              <span class="menu-text">📊 Analíticas Productos</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:dolar-create' %}" class="menu-link" title="Valor Dólar">
+              <i class="fas fa-dollar-sign"></i>
+              <span class="menu-text">Valor Dólar</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:configuracion-dispositivos' %}" class="menu-link" title="Configuración">
+              <i class="fas fa-cogs"></i>
+              <span class="menu-text">Configuración</span>
+            </a>
+          </li>
+          <li class="menu-item">
+            <a href="{% url 'pos:pagos-moviles' %}" class="menu-link" title="Pagos Móviles">
+              <i class="fas fa-mobile-alt"></i>
+              <span class="menu-text">Pagos Móviles</span>
+            </a>
+          </li>
+          {% if user.groups.all.0.name == 'ADMINISTRADOR' %}
+          <li class="menu-item">
+            <a href="{% url 'pos:cierres-caja' %}" class="menu-link" title="Cierres de Caja">
+              <i class="fas fa-cash-register"></i>
+              <span class="menu-text">Cierres de Caja</span>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <div class="content-area">
+        <div class="content-header">
+          <i class="fas fa-tachometer-alt"></i>
+          Panel de Administración
+        </div>
+        {% block content %}
+        <div class="text-center py-5">
+          <div style="font-size: 4rem; color: #4a7c59; margin-bottom: 20px;">
+            <i class="fas fa-leaf"></i>
+          </div>
+          <h2 style="color: #2d5016; margin-bottom: 15px;">Bienvenido al Panel de Administración</h2>
+          <p style="color: #4a7c59; font-size: 1.1rem;">
+            Selecciona una opción del menú lateral para gestionar tu negocio
+          </p>
+        </div>
+        {% endblock content %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{% static 'jquery-3.6.4.js' %}"></script>
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.js' %}"></script>
+  <script src="{% static 'menu.js' %}"></script>
+  
+  <script src="{% static '/node_modules/chart.js/dist/chart.umd.js' %}"></script>
+  <script src="{% static 'pedidos.js' %}"></script>
+  <script src="{% static 'pagos_moviles.js' %}"></script>
+
+  <script>
+    // Función para actualizar el reloj
+    function actualizarReloj() {
+      const ahora = new Date();
+      const horas = ahora.getHours().toString().padStart(2, '0');
+      const minutos = ahora.getMinutes().toString().padStart(2, '0');
+      const segundos = ahora.getSeconds().toString().padStart(2, '0');
+      
+      document.getElementById('reloj-span').textContent = `${horas}:${minutos}:${segundos}`;
+    }
+
+    // Función para actualizar la fecha
+    function actualizarFecha() {
+      const ahora = new Date();
+      const dia = ahora.getDate().toString().padStart(2, '0');
+      const mes = (ahora.getMonth() + 1).toString().padStart(2, '0');
+      const año = ahora.getFullYear();
+      
+      document.getElementById('fecha-span').textContent = `${dia}/${mes}/${año}`;
+    }
+
+    // Función para el reloj (compatibilidad con el código existente)
+    function mueveReloj() {
+      actualizarReloj();
+      actualizarFecha();
+      setInterval(actualizarReloj, 1000);
+    }
+
+    // Inicializar al cargar la página
+    mueveReloj();
+
+    // Efecto hover adicional para los items del menú
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateX(8px) scale(1.02)';
+      });
+      
+      item.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateX(0) scale(1)';
+      });
+    });
+
+    // Function to toggle sidebar for mobile devices
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const icon = document.querySelector('.menu-toggle i');
+      
+      sidebar.classList.toggle('show');
+      
+      if (sidebar.classList.contains('show')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+      } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      }
+    }
+
+    // Function to toggle sidebar from gear icon
+    function toggleSidebarFromGear() {
+      const sidebar = document.getElementById('sidebar');
+      
+      if (window.innerWidth <= 768) {
+        // Mobile: toggle show/hide
+        if (sidebar.classList.contains('hidden')) {
+          showSidebar();
+        } else {
+          hideSidebar();
+        }
+      } else {
+        // Desktop: toggle collapsed/expanded or show if hidden
+        if (sidebar.classList.contains('hidden')) {
+          showSidebar();
+          // After showing, make sure it's collapsed
+          setTimeout(() => {
+            sidebar.classList.add('collapsed');
+          }, 50);
+        } else {
+          // Toggle between collapsed and expanded
+          sidebar.classList.toggle('collapsed');
+        }
+      }
+    }
+
+    // Function to auto-close sidebar when clicking menu items
+    function autoCloseSidebar() {
+      if (window.innerWidth <= 768) {
+        // On mobile, always close completely
+        hideSidebar();
+      } else {
+        // On desktop, always ensure it's collapsed
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.add('collapsed');
+      }
+    }
+
+    // Function to toggle sidebar for desktop (collapse/expand)
+    function toggleSidebarDesktop() {
+      const sidebar = document.getElementById('sidebar');
+      const showBtn = document.getElementById('sidebar-show-btn');
+      
+      if (sidebar.classList.contains('hidden')) {
+        // If hidden, show it first
+        showSidebar();
+        return;
+      }
+      
+      sidebar.classList.toggle('collapsed');
+    }
+
+    // Function to show sidebar
+    function showSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const showBtn = document.getElementById('sidebar-show-btn');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      sidebar.classList.remove('hidden');
+      showBtn.classList.remove('show');
+      
+      // Show overlay on mobile
+      if (window.innerWidth <= 768) {
+        overlay.classList.add('show');
+      } else {
+        // On desktop, always show collapsed by default
+        sidebar.classList.add('collapsed');
+      }
+    }
+
+    // Function to hide sidebar
+    function hideSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const showBtn = document.getElementById('sidebar-show-btn');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      sidebar.classList.add('hidden');
+      showBtn.classList.add('show');
+      overlay.classList.remove('show');
+      
+      // Reset collapsed state when hiding
+      sidebar.classList.remove('collapsed');
+    }
+
+    // Auto-hide sidebar on mobile, show collapsed on desktop
+    function handleResize() {
+      const sidebar = document.getElementById('sidebar');
+      const showBtn = document.getElementById('sidebar-show-btn');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      if (window.innerWidth <= 768) {
+        // Mobile: hide sidebar by default
+        if (!sidebar.classList.contains('hidden')) {
+          hideSidebar();
+        }
+      } else {
+        // Desktop: show sidebar but always collapsed
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('collapsed'); // Always collapsed on desktop
+        showBtn.classList.remove('show');
+        overlay.classList.remove('show');
+      }
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const showBtn = document.querySelector('.sidebar-show-btn');
+      
+      if (window.innerWidth <= 768 && 
+          !sidebar.classList.contains('hidden') &&
+          !sidebar.contains(event.target) && 
+          !menuToggle?.contains(event.target) &&
+          !showBtn?.contains(event.target)) {
+        hideSidebar();
+      }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', handleResize);
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize sidebar state
+      handleResize();
+      
+      // Force collapsed state on desktop always
+      if (window.innerWidth > 768) {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.add('collapsed');
+      }
+      
+      // Add event listeners to all menu items for auto-close
+      const menuLinks = document.querySelectorAll('.menu-link');
+      menuLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          // Small delay to allow navigation to start before closing
+          setTimeout(() => {
+            autoCloseSidebar();
+          }, 100);
+        });
+      });
+      
+      // Add click event to gear icon in sidebar header (if someone clicks it)
+      const sidebarGearIcon = document.querySelector('.sidebar-header i');
+      if (sidebarGearIcon) {
+        sidebarGearIcon.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSidebarFromGear();
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

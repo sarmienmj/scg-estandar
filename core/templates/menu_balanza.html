@@ -1,0 +1,27 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <p class="fs-2">Configurar Balanza</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-4">
+            
+                <label for="impresora">Escoge una balanza:</label>
+
+                <select class="form-select" name="balanza" id="balanza">
+                    <option value="null">Escoja una balanza</option>
+                    {% for balanzaId, balanzaIp in BALANZAS %}
+                    <option value="{{balanzaIp}}">{{balanzaId}} - {{balanzaIp}}</option>
+                    {% endfor %}
+                </select><br>
+                <button onclick="EscogerBalanza({{balanzaIp}})" type="button" class="btn btn-success">Guardar</button>
+            
+        </div>
+    </div>
+    {% endblock %}

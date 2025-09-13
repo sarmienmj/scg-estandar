@@ -1,0 +1,752 @@
+{% extends 'pos_base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #2d5016 0%, #3e7b27 25%, #4a7c59 50%, #2d5016 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow-x: hidden;
+    }
+
+    /* Barra superior consistente con el home */
+    .navbar {
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(20px);
+        border-bottom: 3px solid #4a7c59;
+        box-shadow: 0 8px 25px rgba(45, 80, 22, 0.2);
+        padding: 15px 0;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .navbar-brand img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .navbar-brand img:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+    }
+
+    .nav-badge {
+        background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        margin: 0 8px;
+        box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Fijar ancho del reloj para evitar cambios de formato */
+    #reloj-span {
+        font-family: 'Courier New', monospace;
+        display: inline-block;
+        min-width: 95px;
+        text-align: center;
+    }
+
+    .nav-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(45, 80, 22, 0.4);
+        background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    }
+    
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 100px);
+        padding: 120px 20px 20px;
+        position: relative;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 3rem 2.5rem;
+        box-shadow: 
+            0 25px 50px rgba(45, 80, 22, 0.3),
+            0 15px 35px rgba(45, 80, 22, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        transform: translateY(20px);
+        animation: slideIn 0.8s ease-out forwards;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4a7c59, #3e7b27, #2d5016);
+        border-radius: 20px 20px 0 0;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .logo-container {
+        margin-bottom: 2rem;
+    }
+    
+    .logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        box-shadow: 
+            0 10px 25px rgba(45, 80, 22, 0.3),
+            0 5px 15px rgba(45, 80, 22, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .logo::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: rotate(45deg);
+        transition: all 0.5s;
+        opacity: 0;
+    }
+    
+    .logo:hover::before {
+        animation: shimmer 1s ease-in-out;
+    }
+    
+    .logo:hover {
+        transform: scale(1.05);
+        box-shadow: 
+            0 15px 35px rgba(45, 80, 22, 0.4),
+            0 8px 20px rgba(45, 80, 22, 0.3);
+    }
+    
+    @keyframes shimmer {
+        0% { opacity: 0; transform: rotate(45deg) translateX(-100%); }
+        50% { opacity: 1; }
+        100% { opacity: 0; transform: rotate(45deg) translateX(100%); }
+    }
+    
+    .logo i {
+        font-size: 2.5rem;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d5016;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .welcome-subtitle {
+        font-size: 1rem;
+        color: #4a7c59;
+        margin-bottom: 2rem;
+        font-weight: 500;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #2d5016;
+        font-size: 0.9rem;
+        letter-spacing: 0.3px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1rem 1.2rem;
+        border: 2px solid #e8f5e8;
+        border-radius: 12px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #4a7c59;
+        background: white;
+        box-shadow: 
+            0 0 0 3px rgba(74, 124, 89, 0.1),
+            0 8px 25px rgba(45, 80, 22, 0.15);
+        transform: translateY(-2px);
+    }
+    
+    .form-control::placeholder {
+        color: #a8d5a8;
+        font-style: italic;
+    }
+    
+    .login-button {
+        width: 100%;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 
+            0 8px 20px rgba(45, 80, 22, 0.3),
+            0 4px 12px rgba(45, 80, 22, 0.2);
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    
+    .login-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .login-button:hover::before {
+        left: 100%;
+    }
+    
+    .login-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 
+            0 12px 30px rgba(45, 80, 22, 0.4),
+            0 6px 18px rgba(45, 80, 22, 0.3);
+        background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+    }
+    
+    .login-button:active {
+        transform: translateY(-1px);
+        box-shadow: 
+            0 6px 15px rgba(45, 80, 22, 0.3),
+            0 3px 8px rgba(45, 80, 22, 0.2);
+    }
+    
+    .error-messages {
+        background: rgba(231, 76, 60, 0.1);
+        border: 1px solid rgba(231, 76, 60, 0.3);
+        color: #c0392b;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 480px) {
+        .login-card {
+            padding: 2rem 1.5rem;
+            margin: 10px;
+            border-radius: 15px;
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+        }
+        
+        .navbar-nav {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .login-container {
+            padding: 100px 10px 20px;
+        }
+    }
+
+    /* Enhanced Responsive Design for Tablets and Mobile */
+    @media (max-width: 1024px) and (orientation: landscape) {
+        /* Horizontal Tablet Optimizations */
+        .navbar {
+            padding: 10px 0;
+        }
+        
+        .navbar-brand img {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .nav-badge {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            margin: 0 5px;
+        }
+        
+        .login-container {
+            min-height: calc(100vh - 80px);
+            padding: 100px 20px 20px;
+        }
+        
+        .login-card {
+            max-width: 380px;
+            padding: 2.5rem 2rem;
+        }
+        
+        .logo {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 0.8rem;
+        }
+        
+        .logo i {
+            font-size: 2.2rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.4rem;
+        }
+        
+        .welcome-subtitle {
+            font-size: 0.95rem;
+            margin-bottom: 1.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.3rem;
+        }
+        
+        .form-control {
+            padding: 0.9rem 1.1rem;
+            font-size: 0.95rem;
+        }
+        
+        .login-button {
+            padding: 0.9rem 1.8rem;
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        /* Large tablet adjustments */
+        .navbar-nav {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .nav-badge {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+        
+        .login-container {
+            padding: 110px 30px 30px;
+        }
+        
+        .login-card {
+            max-width: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Medium tablet/mobile adjustments */
+        .container-fluid {
+            padding: 0 15px;
+        }
+        
+        .login-container {
+            padding: 90px 20px 20px;
+            min-height: calc(100vh - 70px);
+        }
+        
+        .login-card {
+            max-width: 100%;
+            padding: 2.5rem 2rem;
+            margin: 0 10px;
+        }
+        
+        .welcome-title {
+            font-size: 1.8rem;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1rem;
+        }
+        
+        .navbar-nav {
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+        }
+        
+        .nav-badge {
+            text-align: center;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .form-control {
+            font-size: 1rem;
+            padding: 1rem 1.1rem;
+        }
+        
+        .login-button {
+            font-size: 1.05rem;
+            padding: 1rem 2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        /* Small mobile optimizations */
+        .navbar {
+            padding: 8px 0;
+        }
+        
+        .navbar-brand img {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .nav-badge {
+            font-size: 0.75rem;
+            padding: 6px 10px;
+            border-radius: 20px;
+        }
+        
+        .login-container {
+            padding: 80px 15px 20px;
+        }
+        
+        .login-card {
+            padding: 2rem 1.5rem;
+            margin: 0 5px;
+            border-radius: 15px;
+        }
+        
+        .logo {
+            width: 65px;
+            height: 65px;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.4rem;
+        }
+        
+        .welcome-subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        
+        .form-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+        
+        .form-control {
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+            border-radius: 10px;
+        }
+        
+        .login-button {
+            padding: 0.9rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 10px;
+        }
+        
+        .error-messages {
+            padding: 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 10px;
+        }
+        
+        /* Better touch targets for mobile */
+        .form-control:focus {
+            transform: translateY(-1px);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+    }
+
+    /* Portrait tablet specific adjustments */
+    @media (max-width: 768px) and (orientation: portrait) {
+        .login-container {
+            padding: 120px 30px 30px;
+        }
+        
+        .login-card {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* Landscape phone adjustments */
+    @media (max-width: 736px) and (orientation: landscape) {
+        .login-container {
+            padding: 70px 20px 20px;
+        }
+        
+        .login-card {
+            padding: 1.5rem 2rem;
+            max-width: 350px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .welcome-subtitle {
+            font-size: 0.85rem;
+            margin-bottom: 1.2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-control {
+            padding: 0.7rem 1rem;
+        }
+        
+        .login-button {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.95rem;
+        }
+    }
+</style>
+
+<!-- Barra superior -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <!-- Logo -->
+    <a class="navbar-brand" href="#">
+            <img src="/media/logo.png" alt="Logo POS">
+    </a>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto me-auto mb-2 mb-lg-0 d-flex align-items-center">
+                <li class="nav-item">
+                    <span class="nav-badge">
+                        <i class="fas fa-clock me-2"></i>
+                        <span id="reloj-span">--:--:--</span>
+                    </span>
+                </li>
+                
+                <li class="nav-item">
+                    <span class="nav-badge">
+                        <i class="fas fa-calendar me-2"></i>
+                        <span id="fecha-span">--/--/----</span>
+                    </span>
+        </li>
+                
+                <li class="nav-item">
+                    <span class="nav-badge">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        <span>Iniciar Sesión</span>
+                    </span>
+        </li>
+      </ul>
+        </div>
+  </div>
+</nav>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-apple-alt"></i>
+            </div>
+            <h1 class="welcome-title">¡Bienvenido!</h1>
+            <p class="welcome-subtitle">{{ SUCURSAL }}</p>
+        </div>
+        
+        {% if form.errors %}
+            <div class="error-messages">
+                Por favor corrige los errores en el formulario.
+    </div>
+        {% endif %}
+        
+      <form method="post">
+        {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_username" class="form-label">Usuario</label>
+                <input type="text" 
+                       name="username" 
+                       class="form-control" 
+                       id="id_username"
+                       placeholder="Ingresa tu nombre de usuario"
+                       value="{{ form.username.value|default:'' }}"
+                       required>
+                {% if form.username.errors %}
+                    <div class="error-messages mt-2">
+                        {{ form.username.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password" class="form-label">Contraseña</label>
+                <input type="password" 
+                       name="password" 
+                       class="form-control" 
+                       id="id_password"
+                       placeholder="Ingresa tu contraseña"
+                       required>
+                {% if form.password.errors %}
+                    <div class="error-messages mt-2">
+                        {{ form.password.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="login-button">
+                Iniciar Sesión
+            </button>
+      </form>
+
+
+  </div>
+</div>
+
+<script>
+// Función para actualizar el reloj
+function actualizarReloj() {
+    const ahora = new Date();
+    let horas = ahora.getHours();
+    const minutos = ahora.getMinutes().toString().padStart(2, '0');
+    const segundos = ahora.getSeconds().toString().padStart(2, '0');
+    
+    // Formato 12 horas consistente
+    const ampm = horas >= 12 ? 'PM' : 'AM';
+    horas = horas % 12;
+    horas = horas ? horas : 12; // La hora '0' debería ser '12'
+    const horasStr = horas.toString().padStart(2, '0');
+    
+    document.getElementById('reloj-span').textContent = `${horasStr}:${minutos}:${segundos} ${ampm}`;
+}
+
+// Función para actualizar la fecha
+function actualizarFecha() {
+    const ahora = new Date();
+    const dia = ahora.getDate().toString().padStart(2, '0');
+    const mes = (ahora.getMonth() + 1).toString().padStart(2, '0');
+    const año = ahora.getFullYear();
+    
+    document.getElementById('fecha-span').textContent = `${dia}/${mes}/${año}`;
+}
+
+// Inicializar y actualizar cada segundo
+actualizarReloj();
+actualizarFecha();
+setInterval(actualizarReloj, 1000);
+
+// Agregar efecto de focus mejorado
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+    });
+    
+    input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+    });
+});
+
+// Efecto de typing en el placeholder
+const usernameInput = document.getElementById('id_username');
+const passwordInput = document.getElementById('id_password');
+
+if (usernameInput && !usernameInput.value) {
+    let placeholderText = 'Ingresa tu nombre de usuario';
+    let index = 0;
+    
+    function typePlaceholder() {
+        if (index < placeholderText.length) {
+            usernameInput.placeholder = placeholderText.slice(0, index + 1);
+            index++;
+            setTimeout(typePlaceholder, 100);
+        }
+    }
+    
+    setTimeout(typePlaceholder, 500);
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{%extends 'menu.html'%}
+
+{%block content%}
+
+<div class="container">
+	<p class="fs-2">Crear Cliente</p>
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-5">
+			<div class="center">
+				<form method="post" novalidate class="card p-2">
+					{%csrf_token %}
+					<h5>Crear Cliente</h5>
+					{% for field in form %}
+					{% if field.name == 'completed' %}
+					<p>
+						{{ field.label_tag }}
+						{{ field }}
+					</p>
+					{% else %}
+					{{ field.label_tag }}
+					{{ field }}
+					{% endif %}
+					{% endfor %}
+
+					<div class="form-buttons m-2">
+						<input type="submit" value="Guardar" class="btn btn-primary" />
+						<a href="{%url 'pos:cliente'%}" class="btn btn-outline">Cancelar</a>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="col"></div>
+
+	</div>
+
+</div>
+
+{%endblock content%}

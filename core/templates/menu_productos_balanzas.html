@@ -1,0 +1,117 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <p class="fs-2">Productos En Balanzas</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col ">
+            <div class="row ">
+                <div class="col  numero-en-balanza"><p>M1</p>
+                    <select id="s20001" class="selects-numeros">
+                       
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>M2</p>
+                    <select id="s20002" class="selects-numeros">
+                       
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>M3</p>
+                    <select id="s20003" class="selects-numeros">
+                    
+                    </select>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col numero-en-balanza"><p>M4</p>
+                    <select id="s20004" class="selects-numeros">
+                      
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>M5</p>
+                    <select id="s20005" class="selects-numeros">
+                        
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>M6</p>
+                    <select id="s20006" class="selects-numeros">
+                       
+                    </select>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col  numero-en-balanza"><p>1</p>
+                    <select id="s10001" class="selects-numeros">
+                       
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>2</p>
+                    <select id="s10002" class="selects-numeros">
+                       
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>3</p>
+                    <select id="s10003" class="selects-numeros">
+                    
+                    </select>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col numero-en-balanza"><p>4</p>
+                    <select id="s10004" class="selects-numeros">
+                      
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>5</p>
+                    <select id="s10005" class="selects-numeros">
+                        
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>6</p>
+                    <select id="s10006" class="selects-numeros">
+                       
+                    </select>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col numero-en-balanza"><p>7</p>
+                    <select id="s10007" class="selects-numeros">
+                       
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>8</p>
+                    <select id="s10008" class="selects-numeros">
+                        
+                    </select>
+                </div>
+                <div class="col numero-en-balanza"><p>9</p>
+                    <select id="s10009" class="selects-numeros">
+                        
+                    </select>
+                </div>
+            </div>
+            <div class="row ">
+                <div class="col numero-en-balanza"><p>0</p>
+                    <select id="s10000" class="selects-numeros">
+                        
+                    </select>
+                </div>
+                <div class="col"></div>                
+                <div class="col"></div>
+            </div>
+        </div>
+        <div class="col-2"></div>
+        <p class="d-none" id="datos-string">
+            {{ numerosBalanza }}
+        </p>
+        <p class="d-none" id="productos-string">
+            {{ productos }}
+        </p>
+    </div>
+    {% endblock %}

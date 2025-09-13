@@ -1,0 +1,356 @@
+.apuntar{
+    cursor: pointer;    
+}
+.sombras{
+    text-shadow: 1px 1px 2px black;
+}
+.eliminar{
+    cursor: not-allowed;
+}
+
+.hover-verde:hover{
+    background-color: rgba(94, 145, 82, 0.116);
+}
+.hover-verde{
+    transition: background-color 0.3s;
+}
+
+.background-verde-claro{
+    background-color: #5a6e3e;
+}
+.background-verde-claro2{ 
+    background-color: rgba(82, 120, 33, 0.43);
+}
+
+.date-input{
+    background-color: #afc488;
+    padding: 15px;
+    top: 50%;
+    left: 50%;
+    font-family: "Roboto Mono",monospace;
+    color: #ffffff;
+    font-size: 15px;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+}
+::-webkit-calendar-picker-indicator{
+    background-color: #ffffff;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.centrado{
+    position: relative;
+    width: 100%;
+    height: 100vh;
+}
+.centro{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 200px;
+    border: 5px solid green;
+    border-radius: 7px;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    padding-top: 67px;
+
+    background-color: #ccc;
+}
+
+.height-n{
+    height: 100px;
+}
+
+.numero-en-balanza{
+    height: 120px;
+    width: 120px;
+    border-radius: 5px;
+    border: 2.3px solid black;
+    margin: 3px;
+    text-align: center;
+    
+}
+.numero-en-balanza > p{
+    font-weight: bold;
+    font-size: 40px;
+}
+
+/* ==================== TEXTO NO SELECCIONABLE ==================== */
+
+/* Hacer todo el POS no seleccionable por defecto */
+body {
+    -webkit-user-select: none;  /* Safari */
+    -moz-user-select: none;     /* Firefox */
+    -ms-user-select: none;      /* Internet Explorer/Edge */
+    user-select: none;          /* Estándar */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-tap-highlight-color: transparent; /* Quitar highlight en móviles */
+}
+
+/* Permitir selección solo en inputs y áreas de texto */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* Asegurar que botones específicos del POS no sean seleccionables */
+.apuntar, .boton-calculadora, .hover-verde {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Específicamente para los botones TARE, PESO, ZERO */
+#tecla-tare, #tecla-zero, #tecla-peso, #boton-c-pesador, #boton-c-numerico {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Botones del teclado numérico */
+#boton-1, #boton-2, #boton-3, #boton-4, #boton-5, #boton-6, 
+#boton-7, #boton-8, #boton-9, #boton-0, #coma, #boton-enter,
+#boton-cantidad, .boton-borrar {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Botones de pago y calculadora de pago */
+#boton-pagar, #boton-vuelto, .boton-calculadora-pagar,
+#boton-calculadora-pagar-1, #boton-calculadora-pagar-2, #boton-calculadora-pagar-3,
+#boton-calculadora-pagar-4, #boton-calculadora-pagar-5, #boton-calculadora-pagar-6,
+#boton-calculadora-pagar-7, #boton-calculadora-pagar-8, #boton-calculadora-pagar-9,
+#boton-calculadora-pagar-0, #boton-calculadora-pagar-coma, #boton-calculadora-pagar-enter,
+#boton-calculadora-pagar-borrar, #boton-calculadora-pagar-d5, #boton-calculadora-pagar-d10,
+#boton-calculadora-pagar-d20 {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Botones de denominaciones */
+#boton-panel-b5, #boton-panel-b10, #boton-panel-b20, #boton-panel-b50,
+#boton-panel-b100, #boton-panel-b200, #boton-panel-b500,
+#btn-panel-d1, #btn-panel-d5, #btn-panel-d10, #btn-panel-d20,
+#btn-panel-d50, #btn-panel-d100, .btn-panel-b, .btn-panel-d {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Métodos de pago */
+#dolar, #bolivar, #debito, #pagomovil, #credito, .metodos-pago {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Botones de navegación */
+#boton-listar-pedidos, #boton-cliente, #boton-estado-caja, 
+#boton-balanza-bluetooth, #boton-producto-cero, .boton-reimprimir,
+.botonGuardarPedido, .cliente-boton {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Display de peso Bluetooth */
+#display-peso-bluetooth, #peso-display-valor {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* Navbar y elementos de navegación */
+.navbar, .nav-item, .navbar-text, .navbar-brand {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* Productos y categorías */
+.filtrar-por-categoria, .pedido-div-producto, .producto-div {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Precios y totales */
+#precio-total {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* Prevenir selección de imágenes */
+img {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: none; /* Prevenir arrastrar imágenes */
+}
+
+/* Permitir interacción con imágenes de productos que necesiten clicks */
+.filtrar-por-categoria img, .producto-div img {
+    pointer-events: auto;
+}
+
+/* Elementos específicos del POS adicionales */
+.pedido-div-producto, .pedido-item, .div-producto-cargado,
+.agregar-producto-pedido, .numero-en-balanza {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Todos los párrafos y texto dentro de botones */
+.apuntar p, .hover-verde p, .boton-calculadora p, 
+.botonGuardarPedido p, .boton-reimprimir p {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* Botones de Material Design y Bootstrap */
+.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-success {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Asegurar que los textos TARE, PESO, ZERO específicamente no sean seleccionables */
+#tecla-tare strong, #tecla-zero strong, #tecla-peso strong {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* ==================== ICONOS UNICODE (REEMPLAZO DE FONT AWESOME) ==================== */
+
+/* Iconos de navegación */
+.fa-bars::before { content: "☰"; }
+.fa-times::before { content: "✕"; }
+.fa-home::before { content: "🏠"; }
+.fa-cogs::before { content: "⚙️"; }
+.fa-cog::before { content: "⚙️"; }
+.fa-arrow-left::before { content: "←"; }
+
+/* Iconos de tiempo */
+.fa-clock::before { content: ""; }
+.fa-calendar::before { content: "📅"; }
+
+/* Iconos de usuario */
+.fa-user::before { content: "👤"; }
+.fa-users::before { content: "👥"; }
+.fa-user-friends::before { content: "👥"; }
+.fa-sign-in-alt::before { content: "➡️"; }
+.fa-sign-out-alt::before { content: "⬅️"; }
+
+/* Iconos de productos y ventas */
+.fa-box::before { content: "📦"; }
+.fa-tags::before { content: "🏷️"; }
+.fa-shopping-cart::before { content: "🛒"; }
+.fa-cash-register::before { content: "💰"; }
+.fa-dollar-sign::before { content: "$"; }
+.fa-weight::before { content: "⚖️"; }
+
+/* Iconos de reportes y gráficos */
+.fa-chart-line::before { content: "📈"; }
+.fa-chart-bar::before { content: ""; }
+.fa-tachometer-alt::before { content: "📊"; }
+
+/* Iconos de impresión y enlaces */
+.fa-print::before { content: "🖨️"; }
+.fa-link::before { content: "🔗"; }
+
+/* Iconos de dispositivos */
+.fa-mobile-alt::before { content: "📱"; }
+.fa-leaf::before { content: "🍃"; }
+
+/* Iconos de alertas y estados */
+.fa-exclamation-triangle::before { content: "⚠️"; }
+.fa-times-circle::before { content: "❌"; }
+.fa-question-circle::before { content: "❓"; }
+.fa-check::before { content: "✅"; }
+.fa-info-circle::before { content: "ℹ️"; }
+.fa-shield-alt::before { content: "️"; }
+
+/* Iconos de reproducción */
+.fa-play::before { content: "▶️"; }
+.fa-play-circle::before { content: "▶️"; }
+.fa-stop-circle::before { content: "⏹️"; }
+
+/* Iconos de frutas */
+.fa-apple-alt::before { content: "🍎"; }
+
+/* Estilos para los iconos */
+.fa, .fas, .far, .fab, .fal {
+    font-style: normal;
+    font-weight: normal;
+    font-family: inherit;
+    display: inline-block;
+    text-align: center;
+    line-height: 1;
+}
+
+/* Ajustes específicos para algunos iconos */
+.fa-bars, .fa-times {
+    font-size: 1.2em;
+}
+
+.fa-dollar-sign {
+    font-weight: bold;
+}
+
+.fa-arrow-left {
+    font-weight: bold;
+}

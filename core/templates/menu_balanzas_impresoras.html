@@ -1,0 +1,28 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <p class="fs-2">Escoge que impresora usar por cada balanza</p>
+        </div>
+    </div>
+    {% for balanzaId, balanzaIp in BALANZAS%}
+        <div class="row">
+            <div class="col-2"></div>
+            <div class="col-4">
+                    <label for="impresora">Balanza {{balanzaId}} - {{balanzaIp}}</label>
+                    <select class="form-select balanzaimpresora" name="{{balanzaId}}" id="{{balanzaId}}">
+                        <option value="null">Escoja una impresora para la Balanza {{balanzaId}} </option>
+                        {% for impresoraId, impresoraIp in IMPRESORAS %}
+                        <option value="{{impresoraIp}}">{{impresoraId}} - {{impresoraIp}}</option>
+                        {% endfor %}
+                    </select><br>
+                    <button onclick="guardarImpresoraBalanza({{balanzaId}})" type="button" class="btn btn-success">Guardar</button>
+            </div>
+        </div>
+    <br>
+
+ {% endfor%}
+    {% endblock %}

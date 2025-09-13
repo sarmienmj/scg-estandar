@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/media/logo.png">
+  <title>Pre Pesados</title>
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body { margin: 0; padding: 0; min-height: 100vh; background: linear-gradient(135deg, #2d5016 0%, #3e7b27 25%, #4a7c59 50%, #2d5016 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+    .navbar { background: rgba(255,255,255,0.95) !important; backdrop-filter: blur(20px); border-bottom: 3px solid #4a7c59; box-shadow: 0 8px 25px rgba(45,80,22,0.2); padding: 15px 0; }
+    .navbar-brand img { width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 4px 15px rgba(45,80,22,0.3); transition: all .3s ease; }
+    .nav-badge { background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%); color: white; padding: 12px 20px; border-radius: 25px; font-weight: 600; margin: 0 8px; box-shadow: 0 4px 15px rgba(45,80,22,0.3); transition: all .3s ease; border: 2px solid rgba(255,255,255,.2); }
+    #reloj-span { font-family: 'Courier New', monospace; display: inline-block; min-width: 95px; text-align: center; }
+    .logout-btn { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: 600; transition: all .3s ease; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); border: 2px solid rgba(255,255,255,.2); }
+    .container-page { padding: 100px 0 40px; }
+    .page-card { background: rgba(255,255,255,.95); backdrop-filter: blur(20px); border-radius: 20px; padding: 25px; border: 2px solid rgba(255,255,255,.3); box-shadow: 0 20px 40px rgba(45,80,22,.2), 0 10px 25px rgba(45,80,22,.1); }
+    .page-title { color: #2d5016; font-weight: 800; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <img src="/media/logo.png" alt="Logo SCG POS">
+      </a>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto me-auto mb-2 mb-lg-0 d-flex align-items-center">
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-clock me-2"></i>
+              <span id="reloj-span">--:--:--</span>
+            </span>
+          </li>
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-calendar me-2"></i>
+              <span id="fecha-span">--/--/----</span>
+            </span>
+          </li>
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <span class="nav-badge">
+              <i class="fas fa-user me-2"></i>
+              <span>{{user.get_username}}</span>
+            </span>
+          </li>
+          {% endif %}
+        </ul>
+        <a id="btn-volver" class="logout-btn">
+          <i class="fas fa-arrow-left me-2"></i>
+          Volver
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container container-page">
+    <div class="page-card">
+      <h1 class="page-title">Pre Pesados</h1>
+
+      <!-- Buscador -->
+      <div class="mb-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input id="buscador-productos" type="text" class="form-control" placeholder="Buscar producto por nombre..." autocomplete="off">
+        </div>
+        <small class="text-muted">Búsqueda por nombre (insensible a mayúsculas/minúsculas; contiene)</small>
+      </div>
+
+      <!-- Grid de productos -->
+      <div id="productos-grid" class="row g-2"></div>
+
+      <!-- Estados -->
+      <div id="productos-loading" class="text-center py-4 text-muted" style="display:none;">
+        <div class="spinner-border text-success me-2" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+        Cargando productos...
+      </div>
+      <div id="productos-empty" class="text-center py-4 text-muted" style="display:none;">
+        No se encontraron productos para mostrar
+      </div>
+    </div>
+  </div>
+
+  <p id="url-productos" style="display:none;">{% url 'pos:productos-list' %}</p>
+  <p id="url-home" style="display:none;">{% url 'pos:home' %}</p>
+
+  <script src="{% static 'jquery-3.6.4.js' %}"></script>
+  <script src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.js' %}"></script>
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script>
+    function actualizarReloj(){
+      const ahora = new Date();
+      let h = ahora.getHours();
+      const m = String(ahora.getMinutes()).padStart(2,'0');
+      const s = String(ahora.getSeconds()).padStart(2,'0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12; h = h ? h : 12;
+      document.getElementById('reloj-span').textContent = `${String(h).padStart(2,'0')}:${m}:${s} ${ampm}`;
+    }
+    function actualizarFecha(){
+      const a = new Date();
+      const d = String(a.getDate()).padStart(2,'0');
+      const m = String(a.getMonth()+1).padStart(2,'0');
+      const y = a.getFullYear();
+      document.getElementById('fecha-span').textContent = `${d}/${m}/${y}`;
+    }
+    document.getElementById('btn-volver').addEventListener('click', function(){
+      window.location.href = document.getElementById('url-home').textContent;
+    });
+    actualizarReloj(); actualizarFecha(); setInterval(actualizarReloj, 1000);
+
+    // ====== Selector de productos ======
+    const urlProductos = document.getElementById('url-productos').textContent;
+    const grid = document.getElementById('productos-grid');
+    const loading = document.getElementById('productos-loading');
+    const empty = document.getElementById('productos-empty');
+    const inputBuscar = document.getElementById('buscador-productos');
+
+    let productos = [];
+
+    function mostrarLoading(mostrar){ loading.style.display = mostrar ? 'block' : 'none'; }
+    function mostrarEmpty(mostrar){ empty.style.display = mostrar ? 'block' : 'none'; }
+
+    function getImageUrl(producto){
+      let img = producto.image || '';
+      if (img.startsWith('http')) {
+        try {
+          const u = new URL(img);
+          // Usar solo el path para que sirva desde el mismo host (/media/..)
+          if (u.pathname) return u.pathname;
+        } catch (e) {
+          // Ignorar y continuar
+        }
+      }
+      if (img.startsWith('/')) return img;
+      if (!img) { img = (producto.title || '').trim(); }
+      if (!img) return '/media/logo.png';
+      if (!/\.(png|jpg|jpeg|webp|gif)$/i.test(img)) img += '.png';
+      if (!img.startsWith('/media/')) img = '/media/' + encodeURIComponent(img);
+      return img;
+    }
+
+    function crearCard(producto){
+      const col = document.createElement('div');
+      col.className = 'col-4 col-md-3 col-lg-2';
+      const imgUrl = getImageUrl(producto);
+      col.innerHTML = `
+        <div class="card h-100 producto-card" data-id="${producto.id}" style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(74,124,89,.2); cursor: pointer;">
+          <div class="ratio ratio-1x1" style="background: #f8f9fa;">
+            <img src="${imgUrl}" alt="${producto.title}" style="object-fit: contain; width: 100%; height: 100%;">
+          </div>
+          <div class="card-body p-1">
+            <div class="fw-semibold text-truncate" title="${producto.title}" style="font-size: .85rem;">${producto.title}</div>
+            <div class="text-success" style="font-size: .8rem;">${formatearPrecio(producto.price, producto.currency)} ${producto.unit ? `<small class=\"text-muted\">/ ${producto.unit}</small>` : ''}</div>
+          </div>
+        </div>`;
+      col.querySelector('.producto-card').addEventListener('click', () => {
+        abrirModalProducto(producto);
+      });
+      return col;
+    }
+
+    function formatearPrecio(valor, currency){
+      const n = Number(valor || 0);
+      // Si currency es '$' o 'USD' formatear distinto; por defecto Bs.
+      if (currency && (currency.toUpperCase() === 'USD' || currency === '$')){
+        return `$ ${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      return `Bs. ${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function render(lista){
+      grid.innerHTML = '';
+      if (!lista || lista.length === 0){
+        mostrarEmpty(true);
+        return;
+      }
+      mostrarEmpty(false);
+      const frag = document.createDocumentFragment();
+      lista.forEach(p => frag.appendChild(crearCard(p)));
+      grid.appendChild(frag);
+    }
+
+    function filtrar(term){
+      const t = (term || '').trim().toLowerCase();
+      if (!t){
+        render(productos);
+        return;
+      }
+      const filtrados = productos.filter(p => (p.title || '').toLowerCase().includes(t));
+      render(filtrados);
+    }
+
+    // Debounce simple
+    let debounceId = null;
+    inputBuscar.addEventListener('input', () => {
+      clearTimeout(debounceId);
+      debounceId = setTimeout(() => filtrar(inputBuscar.value), 160);
+    });
+
+    async function cargarProductos(){
+      try{
+        mostrarLoading(true);
+        const res = await fetch(urlProductos, { headers: { 'Accept': 'application/json' }});
+        if (!res.ok) throw new Error('No se pudo cargar productos');
+        productos = await res.json();
+        render(productos);
+      }catch(err){
+        mostrarEmpty(true);
+        console.error(err);
+      }finally{
+        mostrarLoading(false);
+      }
+    }
+
+    cargarProductos();
+
+    // ====== Modal vacío al seleccionar producto ======
+    let productoSeleccionado = null;
+    function abrirModalProducto(producto){
+      productoSeleccionado = producto;
+      const modalEl = document.getElementById('productoModal');
+      const titulo = modalEl.querySelector('#productoModalLabel');
+      if (titulo) titulo.textContent = producto.title || 'Producto';
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+
+    // Integración con balanza (reutiliza endpoints del POS)
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    async function obtenerPesoBalanzaAsync() {
+      const balanza = localStorage.getItem("balanza");
+      if (!balanza) {
+        alert('No hay balanza configurada');
+        return null;
+      }
+      try {
+        const response = await fetch('/pos/balanza-async', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: new URLSearchParams({ 'codigo': 'P', 'balanza': balanza })
+        });
+        const resultado = await response.text();
+        if (resultado === 'error') throw new Error('Error de comunicación con balanza');
+        const peso = parseFloat(resultado);
+        if (isFinite(peso) && peso > 0) return peso;
+        return 0;
+      } catch (error) {
+        console.error('Error obteniendo peso:', error);
+        alert('Error comunicándose con la balanza: ' + error.message);
+        return null;
+      }
+    }
+
+    document.addEventListener('click', async (e) => {
+      if (e.target.id === 'btn-pesar') {
+        const peso = await obtenerPesoBalanzaAsync();
+        if (peso !== null && peso > 0) {
+          const input = document.getElementById('input-peso');
+          input.value = Number(peso).toFixed(2);
+          
+          // Impresión automática cuando se recibe el peso de la balanza
+          try {
+            const resp = await fetch('{% url "pos:imprimir-etiqueta-tspl" %}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: new URLSearchParams({
+                'nombre': (productoSeleccionado?.title || '').slice(0, 32),
+                'precio_unit': String(productoSeleccionado?.price || 0),
+                'moneda': String(productoSeleccionado?.currency || '$'),
+                'unidad': String(productoSeleccionado?.unit || 'K'),
+                'peso': String(peso.toFixed(2)),
+                'producto_id': String(productoSeleccionado?.id || 0),
+                'impresora': localStorage.getItem('impresora') || '',
+                'copias': '1'
+              })
+            });
+            const json = await resp.json();
+            if (json.success) {
+              // Mostrar notificación de éxito
+              alert('Etiqueta impresa automáticamente');
+              // Cerrar modal tras imprimir automáticamente
+              const modalEl = document.getElementById('productoModal');
+              const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+              modal.hide();
+            } else {
+              alert('No se pudo imprimir la etiqueta: ' + (json.error || 'Error'));
+            }
+          } catch (err) {
+            alert('Error de red al imprimir: ' + err.message);
+          }
+          
+          input.focus();
+        }
+      }
+      if (e.target.id === 'btn-confirmar-peso') {
+        const input = document.getElementById('input-peso');
+        const val = parseFloat(input.value);
+        if (!isFinite(val)) {
+          alert('Ingrese un peso válido (decimal).');
+          input.focus();
+          return;
+        }
+        // Enviar impresión TSPL asíncrona
+        try {
+          const resp = await fetch('{% url "pos:imprimir-etiqueta-tspl" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: new URLSearchParams({
+              'nombre': (productoSeleccionado?.title || '').slice(0, 32),
+              'precio_unit': String(productoSeleccionado?.price || 0),
+              'moneda': String(productoSeleccionado?.currency || '$'),
+              'unidad': String(productoSeleccionado?.unit || 'K'),
+              'peso': String(val),
+              'producto_id': String(productoSeleccionado?.id || 0),
+              'impresora': localStorage.getItem('impresora') || '',
+              'copias': '1'
+            })
+          });
+          const json = await resp.json();
+          if (!json.success) {
+            alert('No se pudo imprimir la etiqueta: ' + (json.error || 'Error'));
+            return;
+          }
+        } catch (err) {
+          alert('Error de red al imprimir: ' + err.message);
+          return;
+        }
+        // Cerrar modal tras enviar
+        const modalEl = document.getElementById('productoModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.hide();
+      }
+    });
+  </script>
+
+  <!-- Modal selección de producto / pesaje -->
+  <div class="modal fade" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="productoModalLabel">Producto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="input-peso" class="form-label fw-semibold">Peso (KG)</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-weight-hanging"></i></span>
+              <input id="input-peso" type="number" inputmode="decimal" step="0.01" min="0" class="form-control" placeholder="0.00" autocomplete="off">
+              <span class="input-group-text">KG</span>
+            </div>
+            <div class="form-text">Puede ingresar el peso manualmente o usar el botón "Pesar" para leer la balanza.</div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button id="btn-pesar" type="button" class="btn btn-success">
+              <i class="fas fa-balance-scale-left me-1"></i> Pesar
+            </button>
+            <button id="btn-confirmar-peso" type="button" class="btn btn-primary ms-auto">
+              <i class="fas fa-check me-1"></i> Confirmar peso
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

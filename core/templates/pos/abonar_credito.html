@@ -1,0 +1,38 @@
+{% extends 'pos_base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Elementos ocultos para JavaScript -->
+<div id="dolar-valor" data-valor="{{ dolar }}" style="display: none;"></div>
+<div id="cliente-info" 
+     data-cliente-id="{{ cliente.id }}"
+     data-deuda-total="{{ deuda_total }}"
+     style="display: none;">
+</div>
+
+<div class="container mt-5">
+    <h2>Abonar a Crédito - {{ cliente.nombre }}</h2>
+    <div class="row">
+        <div class="col-3">
+            <h4>Métodos de Pago</h4>
+            <ul class="list-group">
+                <li class="list-group-item" id="metodo-efectivo-dolar">Efectivo ($)</li>
+                <li class="list-group-item" id="metodo-efectivo-bolivar">Efectivo (Bs)</li>
+                <li class="list-group-item" id="metodo-debito">Débito</li>
+                <li class="list-group-item" id="metodo-pagomovil">Pago Móvil</li>
+            </ul>
+        </div>
+        <div class="col-9">
+            <h4>Detalles del Abono</h4>
+            <div id="detalles-abono">
+                <!-- Aquí se mostrarán los detalles del abono -->
+            </div>
+            <button id="confirmar-abono" class="btn btn-primary mt-3">Confirmar Abono</button>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'jquery-3.6.4.js' %}"></script>
+<script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'abonar.js' %}"></script>
+{% endblock content %} 

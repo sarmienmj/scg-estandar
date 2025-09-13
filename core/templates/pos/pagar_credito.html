@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/media/logo.png">
+  <title>Creditos</title>
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #527821;">
+        <div class="container-fluid">
+          <!-- Logo -->
+          <a class="navbar-brand" href="#">
+            <img src="/media/logo.png" alt="Bootstrap" width="70">
+          </a>
+    
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-5 me-auto mb-2 mb-lg-0">
+    
+              <li id="reloj" class="nav-item ms-5"
+                style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius:4px;">
+                <span id="reloj-span" class="navbar-text" style="color:white">hh:mm:ss</span>
+              </li>
+              <li id="fecha" class="nav-item ms-5"
+              style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+              <span id="fecha-span" class="navbar-text" style="color:white">dd:mm:yy</span>
+              </li>
+            {% if user.is_authenticated %}
+            <li  class="nav-item ms-5 " style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+              <span  class="navbar-text" style="color:white">{{user.get_username}}</span>
+            </li>
+            {% endif %}
+            </ul>
+            <a class="nav-link p-2" style="background-color: #467012; color: white; cursor: pointer; border-radius: 4px;" href=" {% url 'pos:creditos' %}">Volver</a>
+          </div>
+        </div>
+      </nav>
+
+  <div class="container mt-5">
+    <h1>Credito Numero # {{ credito.id }}</h1>
+
+    <div class="mb-3 col-3">
+      <label for="exampleFormControlInput1" class="form-label">Numero del Credito</label>
+      <input type="text" disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.id }}>
+
+      <label for="exampleFormControlInput1" class="form-label"> Nombre del Cliente</label>
+      <input  disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.cliente }}>
+      <label for="exampleFormControlInput1" class="form-label"> Pedido</label>
+      <input  disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.pedido_id }}>
+      <label for="exampleFormControlInput1" class="form-label">Monto</label>
+      <input type="text" disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.monto_credito }}>
+        <label for="exampleFormControlInput1" class="form-label">Abonado</label>
+        <input type="text" disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.abonado }}>
+      <label for="exampleFormControlInput1" class="form-label">Estado</label>
+    <input type="text" disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.estado }}>
+      <label for="exampleFormControlInput1" class="form-label">Cliente Codigo</label>
+      <input type="text" disabled class="form-control" id="exampleFormControlInput1" placeholder={{ credito.cliente_id }}>
+    </div>
+    {% if credito.estado != 'Pagado' %}
+    <div class="mb-3 col-3">
+      <label for="exampleFormControlInput1" class="form-label">Abonar Credito</label>
+      <input id="input-credito-abonar" type="text" class="form-control" id="exampleFormControlInput1" placeholder={{ restante }}>
+      <br/>
+      <button class="btn btn-primary" onclick="abonarCredito({{ credito.id }})">Abonar</button>
+    </div>
+    {% endif %}
+
+    {% if abonos %}
+
+    <h2>Abonos</h2>
+    <div>
+      {% for abono in abonos %}
+      <p> Monto abonado: {{ abono.monto }} - Fecha de Abono: {{ abono.fecha}}</p>
+      <hr/>
+      {% endfor %}
+      
+    </div>
+      
+    
+    {% endif %}
+  <script src="{% static 'jquery-3.6.4.js' %}"></script>
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'credito.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,26 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <p class="fs-2">Configurar Impresora</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            
+                <label for="impresora">Escoge una impresora:</label>
+
+                <select class="form-select" name="impresora" id="impresora">
+                    <option value="null">Escoja una impresora</option>
+                    {% for impresoraId, impresoraIp in IMPRESORAS %}
+                    <option value="{{impresoraIp}}">{{impresoraId}} - {{impresoraIp}}</option>
+                    {% endfor %}
+                </select><br>
+                <button onclick="EscogerImpresora()" type="button" class="btn btn-success">Guardar</button>
+            
+        </div>
+    </div>
+    {% endblock %}

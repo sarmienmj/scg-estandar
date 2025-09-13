@@ -1,0 +1,57 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+
+    <div class="container">
+        <p class="fs-2">Clientes</p>
+      </div>
+      
+      <div class="container">
+        <div class="row g-0">
+          <div class="col-3 mt-3">
+            <button type="button" id="boton-crear-cliente" class="btn"
+              style="background-color: #467012; color:white; cursor: pointer; border-radius: 4px;">Crear Cliente</button>
+          </div>
+          <div class="col-4 mt-3 ">
+              <input type="input" class="form-control" id="buscar-cliente-menu"
+                placeholder="Buscar por Cedula"
+                style="border-radius: 4px;">
+            </div>
+        
+            <div class="col mt-3">
+              <button id="buscar-cliente-btn" type="button" class="btn" style="
+            background-color: #467012; color:white; cursor: pointer; border-radius: 4px;
+            ">Buscar</button>
+            </div>
+      
+      </div>
+
+        <div class="table-responsive border p-3">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Cédula</th>
+                        <th scope="col">Teléfono</th>
+                        <th scope="col">Deuda Total</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.nombre }}</td>
+                        <td>{{ cliente.cedula }}</td>
+                        <td>{{ cliente.telefono }}</td>
+                        <td>{{ cliente.deuda_total }}</td>
+                        <td>
+                            <a href="cliente/{{cliente.id}}" class="btn btn-primary">Ver Detalles</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

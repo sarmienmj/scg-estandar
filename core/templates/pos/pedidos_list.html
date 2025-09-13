@@ -1,0 +1,423 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{%block content%}
+
+<style>
+/* Estilos específicos para los modales de autorización */
+#modalAutorizacionDevolucion,
+#modalAutorizacionInjustificado,
+#modalAutorizacionCancelar {
+  z-index: 9999 !important;
+}
+
+#modalAutorizacionDevolucion .modal-dialog,
+#modalAutorizacionInjustificado .modal-dialog,
+#modalAutorizacionCancelar .modal-dialog {
+  z-index: 10000 !important;
+  margin: 1.75rem auto !important;
+  position: relative !important;
+}
+
+#modalAutorizacionDevolucion .modal-content,
+#modalAutorizacionInjustificado .modal-content,
+#modalAutorizacionCancelar .modal-content {
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+/* Asegurar que el backdrop esté por debajo */
+.modal-backdrop {
+  z-index: 9998 !important;
+}
+
+/* Forzar posicionamiento correcto */
+.modal.show {
+  display: block !important;
+  padding-right: 0 !important;
+}
+
+.modal.show .modal-dialog {
+  transform: none !important;
+}
+
+/* Estilos para el dropdown de acciones */
+.dropdown-menu {
+  min-width: 180px;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+  margin-right: 0.5rem;
+  width: 16px;
+}
+
+.dropdown-item-text {
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* Estilos para filas según estado del pedido */
+.pedido-por-pagar {
+  background-color: #ffe4b5 !important; /* Naranja claro más visible */
+}
+
+.pedido-pagado {
+  background-color: #d1edff !important; /* Azul claro */
+}
+
+.pedido-pagado-credito {
+  background-color: #e2e3ff !important; /* Azul-púrpura claro */
+}
+
+.pedido-devolucion {
+  background-color: #fff8dc !important; /* Beige claro */
+  border-left: 4px solid #ffc107 !important; /* Borde amarillo */
+}
+
+.pedido-cancelado {
+  background-color: #f8d7da !important; /* Rojo claro */
+  border-left: 4px solid #dc3545 !important; /* Borde rojo */
+}
+
+.pedido-injustificado {
+  background-color: #e2e3e5 !important; /* Gris claro */
+  border-left: 4px solid #6c757d !important; /* Borde gris */
+}
+
+.pedido-entregado {
+  background-color: #d4edda !important; /* Verde claro */
+}
+
+.pedido-despachado {
+  background-color: #d1ecf1 !important; /* Azul-verde claro */
+}
+
+.pedido-procesando {
+  background-color: #ffeaa7 !important; /* Amarillo-naranja claro */
+}
+
+/* Hover effect para las filas */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.075) !important;
+}
+</style>
+<div class="container">
+  <p class="fs-2">Pedidos</p>
+</div>
+
+<div class="container mb-4">
+  <div class="card">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Filtros de búsqueda</h5>
+    </div>
+    <div class="card-body">
+      <form id="filtro-pedidos-form">
+        <!-- Fechas -->
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label for="fecha_inicio" class="form-label">Fecha inicio:</label>
+            <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio">
+          </div>
+          <div class="col-md-3">
+            <label for="fecha_fin" class="form-label">Fecha fin:</label>
+            <input type="date" class="form-control" id="fecha_fin" name="fecha_fin">
+          </div>
+        
+          <!-- Estados -->
+          <div class="col-md-3">
+            <label for="estado" class="form-label">Estado:</label>
+            <select class="form-select" id="estado" name="estado">
+              <option value="">Todos</option>
+              <option value="Por pagar">Por pagar</option>
+              <option value="Pagado">Pagado</option>
+              <option value="Pagado con Crédito">Pagado con Crédito</option>
+              <option value="Devolución">Devolución</option>
+              <option value="Cancelado">Cancelado</option>
+              <option value="Injustificado">Injustificado</option>
+              <option value="Entregado">Entregado</option>
+              <option value="Despachado">Despachado</option>
+              <option value="Procesando">Procesando</option>
+            </select>
+          </div>
+          
+          <!-- Búsqueda por cliente -->
+          <div class="col-md-3">
+            <label for="cliente" class="form-label">Cliente:</label>
+            <input type="text" class="form-control" id="cliente" name="cliente" placeholder="Nombre o ID">
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <!-- Búsqueda por monto total -->
+          <div class="col-md-3">
+            <label for="monto_min" class="form-label">Monto mínimo ($):</label>
+            <input type="number" step="0.01" min="0" class="form-control" id="monto_min" name="monto_min">
+          </div>
+          
+          <div class="col-md-3">
+            <label for="monto_max" class="form-label">Monto máximo ($):</label>
+            <input type="number" step="0.01" min="0" class="form-control" id="monto_max" name="monto_max">
+          </div>
+          
+          <!-- Filtro por cajero/usuario -->
+          <div class="col-md-3">
+            <label for="usuario" class="form-label">Cajero:</label>
+            <select class="form-select" id="usuario" name="usuario">
+              <option value="">Todos</option>
+              {% for user in users %}
+                <option value="{{ user.username }}">{{ user.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- ID de pedido -->
+          <div class="col-md-3">
+            <label for="pedido_id" class="form-label">ID de Pedido:</label>
+            <input type="number" min="1" class="form-control" id="pedido_id" name="pedido_id">
+          </div>
+        </div>
+        
+        <div class="row mb-3">
+          <!-- Filtro por pesador -->
+          <div class="col-md-3">
+            <label for="pesador" class="form-label">Pesador:</label>
+            <select class="form-select" id="pesador" name="pesador">
+              <option value="">Todos</option>
+              {% for pesador in pesadores %}
+                <option value="{{ pesador }}">{{ pesador }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="col-12 mt-3">
+          <button type="submit" class="btn btn-success">Aplicar filtros</button>
+          <button type="reset" class="btn btn-secondary ms-2">Limpiar filtros</button>
+          <button id="btn-exportar-excel" class="btn btn-primary ms-2">Exportar a Excel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Resultados de la búsqueda -->
+  <div class="alert alert-info mb-3 mt-3" id="resultados-contador">
+    Mostrando todos los pedidos (máximo 150)
+  </div>
+
+
+</div>
+
+<div id="lista-pedidos-div" class="container-fluid vh-100 overflow-auto mt-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="container">
+        <table class="table table-hover table-bordered table-striped" style="background-color:white;">
+            <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Cliente</th>
+                  <th scope="col">Total</th>
+                  <th scope="col">Fecha Pagado</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Usuario</th>
+                  <th scope="col">Pesador</th>
+                  <th scope="col">Ver</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+          <tbody id="menu-lista-pedidos">
+            {% for pedido in pedidos_list %}
+            <tr class="{% if pedido.status == 'Por pagar' %}pedido-por-pagar{% elif pedido.status == 'Pagado' %}pedido-pagado{% elif pedido.status == 'Pagado con Crédito' %}pedido-pagado-credito{% elif pedido.status == 'Devolución' %}pedido-devolucion{% elif pedido.status == 'Cancelado' %}pedido-cancelado{% elif pedido.status == 'Injustificado' %}pedido-injustificado{% elif pedido.status == 'Entregado' %}pedido-entregado{% elif pedido.status == 'Despachado' %}pedido-despachado{% elif pedido.status == 'Procesando' %}pedido-procesando{% endif %}">
+              <th>{{pedido.pk}}</th>
+              <td>{{pedido.fecha|date:"d/m/Y H:i"}}</td>
+              <td>
+                {% for cliente in clientes %}
+                  {% if cliente.id == pedido.cliente %}
+                    {{cliente.nombre}}
+                  {% endif %}
+                {% endfor %}
+                {% if pedido.cliente == 0 %}
+                  Cliente General
+                {% endif %}
+              </td>
+              <td>${{pedido.precio_total|floatformat:2}}</td>
+              <td>{{pedido.pagado_fecha|date:"d/m/Y H:i"}}</td>
+              <td>{{pedido.status}}</td>
+              <td>{{pedido.usuario}}</td>
+              <td>{{pedido.pesador}}</td>
+              <td>
+                <a href="{% url 'pos:posPedido' pedido.pk %}" class="btn btn-primary btn-sm">Ver</a>
+              </td>
+              <td>
+                <div class="dropdown">
+                  <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="dropdownAcciones{{pedido.pk}}" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-cog"></i> Acciones
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="dropdownAcciones{{pedido.pk}}">
+                    {% if pedido.status == "Por pagar" %}
+                      <li>
+                        <button class="dropdown-item btn-marcar-devolucion" data-pedido-id="{{pedido.pk}}">
+                          <i class="fas fa-undo text-warning"></i> Devolución
+                        </button>
+                      </li>
+                    {% endif %}
+                    {% if pedido.status != "Injustificado" and pedido.status != "Cancelado" %}
+                      <li>
+                        <button class="dropdown-item btn-marcar-injustificado" data-pedido-id="{{pedido.pk}}">
+                          <i class="fas fa-question-circle text-secondary"></i> Injustificado
+                        </button>
+                      </li>
+                    {% endif %}
+                    {% if pedido.status != "Cancelado" %}
+                      <li>
+                        <button class="dropdown-item btn-cancelar-pedido" data-pedido-id="{{pedido.pk}}">
+                          <i class="fas fa-times-circle text-danger"></i> Cancelar
+                        </button>
+                      </li>
+                    {% endif %}
+                    {% if pedido.status == "Cancelado" %}
+                      <li><span class="dropdown-item-text text-muted">No hay acciones disponibles</span></li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Autorización para Devolución -->
+<div class="modal fade" id="modalAutorizacionDevolucion" tabindex="-1" aria-labelledby="modalAutorizacionDevolucionLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title" id="modalAutorizacionDevolucionLabel">
+          <i class="fas fa-exclamation-triangle"></i> Autorización Requerida - Devolución
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>¡Atención!</strong> Está a punto de marcar el pedido #<span id="pedido-devolucion-id"></span> como <strong>DEVOLUCIÓN</strong>.
+          <br><br>
+          Esta acción requiere autorización de un supervisor.
+        </div>
+        
+        <form id="form-autorizacion-devolucion">
+          <div class="mb-3">
+            <label for="codigo-autorizacion" class="form-label">Código de Autorización:</label>
+            <input type="password" class="form-control" id="codigo-autorizacion" name="codigo" required 
+                   placeholder="Ingrese código de supervisor/administrador">
+          </div>
+          
+          <input type="hidden" id="pedido-id-devolucion" name="pedido_id">
+        </form>
+        
+        <div id="mensaje-autorizacion" class="alert" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="btn-confirmar-devolucion">
+          <i class="fas fa-check"></i> Confirmar Devolución
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Autorización para Injustificado -->
+<div class="modal fade" id="modalAutorizacionInjustificado" tabindex="-1" aria-labelledby="modalAutorizacionInjustificadoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary">
+        <h5 class="modal-title text-white" id="modalAutorizacionInjustificadoLabel">
+          <i class="fas fa-exclamation-triangle"></i> Autorización Requerida - Injustificado
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>¡Atención!</strong> Está a punto de marcar el pedido #<span id="pedido-injustificado-id"></span> como <strong>INJUSTIFICADO</strong>.
+          <br><br>
+          Esta acción requiere autorización de un supervisor.
+        </div>
+        
+        <form id="form-autorizacion-injustificado">
+          <div class="mb-3">
+            <label for="codigo-autorizacion-injustificado" class="form-label">Código de Autorización:</label>
+            <input type="password" class="form-control" id="codigo-autorizacion-injustificado" name="codigo" required 
+                   placeholder="Ingrese código de supervisor/administrador">
+          </div>
+          
+          <input type="hidden" id="pedido-id-injustificado" name="pedido_id">
+        </form>
+        
+        <div id="mensaje-autorizacion-injustificado" class="alert" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-secondary" id="btn-confirmar-injustificado">
+          <i class="fas fa-check"></i> Confirmar Injustificado
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Autorización para Cancelar -->
+<div class="modal fade" id="modalAutorizacionCancelar" tabindex="-1" aria-labelledby="modalAutorizacionCancelarLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white" id="modalAutorizacionCancelarLabel">
+          <i class="fas fa-exclamation-triangle"></i> Autorización Requerida - Cancelar Pedido
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <strong>¡Atención!</strong> Está a punto de <strong>CANCELAR</strong> el pedido #<span id="pedido-cancelar-id"></span>.
+          <br><br>
+          Esta acción requiere autorización de un supervisor y no se puede deshacer.
+        </div>
+        
+        <form id="form-autorizacion-cancelar">
+          <div class="mb-3">
+            <label for="codigo-autorizacion-cancelar" class="form-label">Código de Autorización:</label>
+            <input type="password" class="form-control" id="codigo-autorizacion-cancelar" name="codigo" required 
+                   placeholder="Ingrese código de supervisor/administrador">
+          </div>
+          
+          <input type="hidden" id="pedido-id-cancelar" name="pedido_id">
+        </form>
+        
+        <div id="mensaje-autorizacion-cancelar" class="alert" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btn-confirmar-cancelar">
+          <i class="fas fa-check"></i> Confirmar Cancelación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+

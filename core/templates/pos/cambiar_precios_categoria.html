@@ -1,0 +1,133 @@
+{% extends 'menu.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+<div class="container mt-3">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="container">
+  <h2 class="mt-4 mb-3">Cambiar Precios - Categoría: {{ categoria.nombre }}</h2>
+  
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Información</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>Total de productos en esta categoría:</strong> {{ total_productos }}</p>
+      <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Los cambios se aplicarán a todos los productos de esta categoría.</p>
+    </div>
+  </div>
+  
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Establecer Precio Fijo</h5>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+        
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <label for="{{ form.valor.id_for_label }}" class="form-label">{{ form.valor.label }}</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              {{ form.valor }}
+            </div>
+            {% if form.valor.errors %}
+            <div class="text-danger">
+              {{ form.valor.errors }}
+            </div>
+            {% endif %}
+            <div class="form-text">
+              Este valor será asignado a todos los productos de la categoría.
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="form-label">Aplicar cambios a:</label>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-check">
+                {{ form.aplicar_a_precio_detal }}
+                <label class="form-check-label" for="{{ form.aplicar_a_precio_detal.id_for_label }}">
+                  Precio Detalle
+                </label>
+              </div>
+            </div>
+            
+          </div>
+          {% if form.aplicar_a_precio_detal.errors or form.aplicar_a_precio_mayor.errors or form.aplicar_a_precio_especial.errors %}
+          <div class="text-danger mt-2">
+            Debes seleccionar al menos un tipo de precio.
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="alert alert-warning">
+          <strong>¡Atención!</strong> Esta acción actualizará los precios de todos los productos en esta categoría y no se puede deshacer.
+        </div>
+        
+        <div class="d-flex justify-content-between">
+          <a href="{% url 'pos:categorias' %}" class="btn btn-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-primary" onclick="return confirm('¿Estás seguro de querer modificar los precios de todos los productos de esta categoría?');">
+            Aplicar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Productos en esta categoría</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#ID</th>
+              <th>Nombre</th>
+              <th>Moneda</th>
+              <th>Precio Detalle</th>
+              <th>Precio Mayor</th>
+              <th>Precio Especial</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for producto in productos %}
+            <tr>
+              <td>{{ producto.id }}</td>
+              <td>{{ producto.nombre }}</td>
+              <td>{{ producto.moneda }}</td>
+              <td>{% if producto.precio_detal %}{{ producto.precio_detal|floatformat:2 }} {{ producto.moneda }}{% else %}-{% endif %}</td>
+              <td>{% if producto.precio_mayor %}{{ producto.precio_mayor|floatformat:2 }} {{ producto.moneda }}{% else %}-{% endif %}</td>
+              <td>{% if producto.precio_especial %}{{ producto.precio_especial|floatformat:2 }} {{ producto.moneda }}{% else %}-{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-3">No hay productos en esta categoría.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

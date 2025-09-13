@@ -1,0 +1,486 @@
+{%extends 'menu.html'%}
+
+{%block content%}
+
+<style>
+  .dolar-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .dolar-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    box-shadow: 
+      0 25px 50px rgba(45, 80, 22, 0.1),
+      0 15px 35px rgba(45, 80, 22, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .dolar-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+      0 35px 70px rgba(45, 80, 22, 0.15),
+      0 20px 45px rgba(45, 80, 22, 0.1);
+  }
+
+  .dolar-header {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dolar-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+  }
+
+  .dolar-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .dolar-header .icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+    position: relative;
+    z-index: 2;
+  }
+
+  .dolar-body {
+    padding: 40px;
+  }
+
+  .form-group {
+    margin-bottom: 30px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #2d5016;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 18px 25px;
+    border: 3px solid #e0e0e0;
+    border-radius: 15px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    color: #2d5016;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #4a7c59;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 
+      0 0 0 4px rgba(74, 124, 89, 0.2),
+      0 10px 25px rgba(45, 80, 22, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .currency-symbol {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: #4a7c59;
+    font-weight: bold;
+  }
+
+  .input-wrapper {
+    position: relative;
+  }
+
+  .input-wrapper .form-control {
+    padding-left: 50px;
+  }
+
+  .form-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .btn-save {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+    color: white;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(45, 80, 22, 0.3);
+    min-width: 150px;
+  }
+
+  .btn-save:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(45, 80, 22, 0.4);
+    background: linear-gradient(135deg, #3e7b27 0%, #2d5016 100%);
+  }
+
+  .btn-save:active {
+    transform: translateY(-1px);
+  }
+
+  .btn-cancel {
+    background: transparent;
+    color: #6c757d;
+    border: 2px solid #6c757d;
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-cancel:hover {
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(108, 117, 125, 0.3);
+  }
+
+  .current-value {
+    background: linear-gradient(135deg, rgba(74, 124, 89, 0.1) 0%, rgba(62, 123, 39, 0.05) 100%);
+    border: 2px solid #4a7c59;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .current-value::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 2s ease-in-out infinite;
+  }
+
+  @keyframes shine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  .current-value h4 {
+    color: #2d5016;
+    margin: 0 0 15px 0;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .current-value .value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #4a7c59;
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(45, 80, 22, 0.1);
+  }
+
+  .current-value .value small {
+    font-size: 1rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin-left: 8px;
+  }
+
+  .info-text {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    margin-bottom: 25px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .dolar-container {
+      padding: 20px 10px;
+    }
+    
+    .dolar-body {
+      padding: 30px 20px;
+    }
+    
+    .dolar-header h2 {
+      font-size: 1.5rem;
+    }
+    
+    .dolar-header .icon {
+      font-size: 2rem;
+    }
+    
+    .form-buttons {
+      flex-direction: column;
+    }
+    
+    .btn-save,
+    .btn-cancel {
+      width: 100%;
+    }
+  }
+
+  /* Estilos para el popup de éxito */
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .popup-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%;
+    transform: scale(0.7);
+    transition: all 0.3s ease;
+  }
+
+  .popup-overlay.show .popup-content {
+    transform: scale(1);
+  }
+
+  .popup-icon {
+    font-size: 3rem;
+    color: #4a7c59;
+    margin-bottom: 20px;
+  }
+
+  .popup-title {
+    font-size: 1.5rem;
+    color: #2d5016;
+    margin-bottom: 15px;
+    font-weight: 700;
+  }
+
+  .popup-message {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 1.1rem;
+  }
+
+  .popup-btn {
+    background: linear-gradient(135deg, #4a7c59 0%, #3e7b27 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .popup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 124, 89, 0.4);
+  }
+</style>
+
+<div class="dolar-container">
+  <div class="dolar-card">
+    <div class="dolar-header">
+      <div class="icon">
+        <i class="fas fa-dollar-sign"></i>
+      </div>
+      <h2>Valor del Dólar</h2>
+    </div>
+    
+    <div class="dolar-body">
+      <div class="current-value">
+        <h4>
+          <i class="fas fa-chart-line me-2"></i>
+          Valor Actual
+        </h4>
+        <div class="value">
+          {% if object and object.valor %}
+            ${{ object.valor|floatformat:2 }}
+          {% elif es_creacion %}
+            <span class="text-muted">Sin configurar</span>
+          {% else %}
+            $0.00
+          {% endif %}
+          <small>VES</small>
+        </div>
+      </div>
+      
+      <div class="info-text">
+        {% if es_creacion %}
+          <p>Configura la tasa de cambio inicial del dólar para tu sistema POS</p>
+        {% else %}
+          <p>Actualiza la tasa de cambio del dólar para tu sistema POS</p>
+        {% endif %}
+      </div>
+      
+      <form method="post" novalidate>
+        {%csrf_token %}
+        
+        {% for field in form %}
+          <div class="form-group">
+            {% if field.name != 'completed' %}
+              <label class="form-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-exchange-alt me-2"></i>
+                {{ field.label }}
+              </label>
+              <div class="input-wrapper">
+                <div class="currency-symbol">$</div>
+                {% if field.value %}
+                  <input type="number" 
+                         class="form-control" 
+                         name="{{ field.html_name }}" 
+                         id="{{ field.id_for_label }}" 
+                         value="{{ field.value }}" 
+                         step="0.01" 
+                         min="0" 
+                         placeholder="0.00"
+                         required>
+                {% else %}
+                  <input type="number" 
+                         class="form-control" 
+                         name="{{ field.html_name }}" 
+                         id="{{ field.id_for_label }}" 
+                         step="0.01" 
+                         min="0" 
+                         placeholder="0.00"
+                         required>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="form-buttons">
+          <button type="submit" class="btn-save">
+            <i class="fas fa-save me-2"></i>
+            Guardar
+          </button>
+          <a href="{%url 'pos:menu'%}" class="btn-cancel">
+            <i class="fas fa-times me-2"></i>
+            Cancelar
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Popup de éxito -->
+<div class="popup-overlay" id="successPopup">
+  <div class="popup-content">
+    <div class="popup-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <h3 class="popup-title">¡Éxito!</h3>
+    <p class="popup-message">Dólar guardado con éxito</p>
+    <button class="popup-btn" onclick="closePopup()">Continuar</button>
+  </div>
+</div>
+
+<script>
+  // Mostrar popup si se guardó exitosamente
+  {% if mostrar_popup %}
+    document.addEventListener('DOMContentLoaded', function() {
+      showPopup();
+    });
+  {% endif %}
+
+  function showPopup() {
+    document.getElementById('successPopup').classList.add('show');
+  }
+
+  function closePopup() {
+    document.getElementById('successPopup').classList.remove('show');
+  }
+
+  // Cerrar popup al hacer clic fuera de él
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('popup-overlay')) {
+      closePopup();
+    }
+  });
+
+  // Cerrar popup con tecla Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closePopup();
+    }
+  });
+</script>
+
+{%endblock content%}

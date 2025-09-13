@@ -1,0 +1,461 @@
+/* Estilos específicos para la vista de productos */
+
+/* Animaciones y transiciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.productos-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Mejoras en las tarjetas de estadísticas */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+/* Mejoras en la tabla */
+.table-custom tbody tr {
+  position: relative;
+}
+
+.table-custom tbody tr::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #467012, #527821);
+  transition: width 0.3s ease;
+}
+
+.table-custom tbody tr:hover::after {
+  width: 100%;
+}
+
+/* Mejoras en los botones de acción */
+.btn-action {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.btn-action:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mejoras en los campos de búsqueda */
+.form-control-custom {
+  position: relative;
+}
+
+.form-control-custom:focus {
+  transform: scale(1.02);
+}
+
+/* Indicador de carga */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mejoras responsive adicionales */
+@media (max-width: 576px) {
+  .productos-header {
+    text-align: center;
+  }
+  
+  .productos-title {
+    font-size: 1.5rem;
+  }
+  
+  .productos-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .search-controls {
+    padding: 15px;
+  }
+  
+  .btn-primary-custom,
+  .btn-success-custom {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .stat-card {
+    padding: 15px;
+  }
+  
+  .stat-number {
+    font-size: 1.8rem;
+  }
+  
+  .stat-icon {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mejoras para tablets */
+@media (min-width: 577px) and (max-width: 768px) {
+  .productos-title {
+    font-size: 2.2rem;
+  }
+  
+  .search-controls {
+    padding: 20px;
+  }
+  
+  .table-custom {
+    font-size: 0.85rem;
+  }
+}
+
+/* Mejoras para pantallas grandes */
+@media (min-width: 1200px) {
+  .productos-container {
+    padding: 30px 0;
+  }
+  
+  .productos-header {
+    padding: 40px 0;
+  }
+  
+  .productos-title {
+    font-size: 3rem;
+  }
+  
+  .search-controls {
+    padding: 30px;
+  }
+  
+  .stat-card {
+    padding: 30px;
+  }
+  
+  .stat-number {
+    font-size: 3rem;
+  }
+}
+
+/* Mejoras en el estado vacío */
+.empty-state {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  margin: 20px;
+}
+
+.empty-state i {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Mejoras en los badges de categoría */
+.badge {
+  transition: all 0.3s ease;
+}
+
+.badge:hover {
+  transform: scale(1.1);
+}
+
+/* Mejoras en el scroll */
+.table-responsive-custom::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-responsive-custom::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive-custom::-webkit-scrollbar-thumb {
+  background: #467012;
+  border-radius: 4px;
+}
+
+.table-responsive-custom::-webkit-scrollbar-thumb:hover {
+  background: #527821;
+}
+
+/* Mejoras en los tooltips */
+.tooltip {
+  font-size: 0.8rem;
+}
+
+/* Mejoras en la accesibilidad */
+.btn-action:focus {
+  outline: 2px solid #467012;
+  outline-offset: 2px;
+}
+
+.form-control-custom:focus {
+  outline: none;
+}
+
+/* Mejoras en la impresión */
+@media print {
+  .productos-header,
+  .search-controls,
+  .btn-action {
+    display: none !important;
+  }
+  
+  .products-table-container {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .table-custom {
+    font-size: 12px;
+  }
+}
+
+/* Mejoras en la animación de entrada */
+.productos-container > * {
+  animation: slideIn 0.8s ease-out;
+}
+
+.productos-container > *:nth-child(1) { animation-delay: 0.1s; }
+.productos-container > *:nth-child(2) { animation-delay: 0.2s; }
+.productos-container > *:nth-child(3) { animation-delay: 0.3s; }
+.productos-container > *:nth-child(4) { animation-delay: 0.4s; }
+
+/* Mejoras en el feedback visual */
+.btn-primary-custom:active,
+.btn-success-custom:active {
+  transform: translateY(1px);
+}
+
+/* Mejoras en la tipografía */
+.productos-title {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.productos-subtitle {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 300;
+}
+
+/* Mejoras en el espaciado */
+.search-controls .row {
+  margin: 0;
+}
+
+.search-controls .col-lg-3,
+.search-controls .col-lg-2,
+.search-controls .col-md-6,
+.search-controls .col-md-12 {
+  padding: 0 7.5px;
+  margin-bottom: 15px;
+}
+
+/* Espaciado adicional para móviles */
+@media (max-width: 768px) {
+  .search-controls .col-lg-3,
+  .search-controls .col-lg-2,
+  .search-controls .col-md-6,
+  .search-controls .col-md-12 {
+    margin-bottom: 20px;
+  }
+  
+  .search-controls .row {
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .search-controls .col-lg-3,
+  .search-controls .col-lg-2,
+  .search-controls .col-md-6,
+  .search-controls .col-md-12 {
+    margin-bottom: 25px;
+  }
+  
+  .search-controls {
+    padding: 20px 15px;
+  }
+}
+
+/* Mejoras en la responsividad de la tabla */
+@media (max-width: 768px) {
+  .table-custom {
+    min-width: 800px;
+  }
+  
+  .table-responsive-custom {
+    overflow-x: auto;
+  }
+}
+
+/* Mejoras en los iconos */
+.fas {
+  transition: transform 0.3s ease;
+}
+
+.btn:hover .fas {
+  transform: scale(1.1);
+}
+
+/* Mejoras en el estado de carga */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #467012;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+} 
+
+.btn-primary-custom, .btn-success-custom {
+  background: linear-gradient(90deg, #467012 0%, #527821 100%);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(70,112,18,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-primary-custom:hover, .btn-primary-custom:focus,
+.btn-success-custom:hover, .btn-success-custom:focus {
+  background: linear-gradient(90deg, #527821 0%, #467012 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(82,120,33,0.15);
+}
+
+/* Estilos para los botones de acción */
+.btn-group .btn-action {
+  width: 35px;
+  height: 35px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin: 0 2px;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-action.btn-edit {
+  background: linear-gradient(135deg, #527821 0%, #467012 100%);
+  color: #fff;
+}
+.btn-action.btn-edit:hover, .btn-action.btn-edit:focus {
+  background: linear-gradient(135deg, #467012 0%, #527821 100%);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(70,112,18,0.3);
+}
+
+.btn-action.btn-quantity {
+  background: linear-gradient(135deg, #6bbf59 0%, #467012 100%);
+  color: #fff;
+}
+.btn-action.btn-quantity:hover, .btn-action.btn-quantity:focus {
+  background: linear-gradient(135deg, #467012 0%, #6bbf59 100%);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(107,191,89,0.3);
+}
+
+.btn-action.btn-delete {
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+  color: #fff;
+}
+.btn-action.btn-delete:hover, .btn-action.btn-delete:focus {
+  background: linear-gradient(135deg, #b02a37 0%, #dc3545 100%);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+}
+
+/* Mejoras en el grupo de botones */
+.btn-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Responsive para botones de acción */
+@media (max-width: 768px) {
+  .btn-group .btn-action {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+  
+  .btn-group {
+    gap: 2px;
+  }
+}
+
+@media (max-width: 576px) {
+  .btn-group .btn-action {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+} 

@@ -1,0 +1,290 @@
+{% extends 'pos_base.html' %}
+{% load static %}
+
+{% block title %}Procesar Pago - SCG POS{% endblock title %}
+
+{% block content %}
+<div class="vh-100" style="background-color: #ccc ;">
+
+  <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #527821;">
+    <div class="container-fluid">
+      <!-- Logo -->
+      <a class="navbar-brand" href="#">
+        <img src="/media/logo.png" alt="Bootstrap" width="70">
+      </a>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-5 me-auto mb-2 mb-lg-0">
+
+          <li id="reloj" class="nav-item ms-5"
+            style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius:4px;">
+            <span id="reloj-span" class="navbar-text" style="color:white">hh:mm:ss</span>
+          </li>
+          <li id="fecha" class="nav-item ms-5"
+          style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+          <span id="fecha-span" class="navbar-text" style="color:white">dd:mm:yy</span>
+          </li>
+          <li id="user" class="nav-item ms-5"
+          style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+          <span id="" class="navbar-text" style="color:white">{{user.get_username}}</span>
+          </li>
+          <li id="" class="nav-item ms-5 cliente-boton"
+          style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
+          <span id="" class="navbar-text" style="color:white">{{cliente.nombre}}</span>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+
+  <div id="pagina-de-pago" class="container text-center" style="background-color: white ;">
+    
+    <div class="row align-items-center border-bottom">
+      <div class="col-1 ">
+        <button id="volver-boton" type="button" class="btn btn-success">Volver</button>
+      </div>
+      <div class="col-2"></div>
+      <div class="col">
+        <p class="fs-2 fw-bold">PAGO</p>
+      </div>
+      <div class="col-1">
+        <p id="p-pedido_id" class="fs-3"></p>
+      </div>
+      <div class="col-1"></div>
+      <div class="col-1">
+        <p class="fs-3">BCV: {{dolar}}</p>
+      </div>
+    </div>
+
+    <div class="row align-items-start">
+      <div class="col-4 border">
+        <div class="row align-items-center">
+          
+          <div id="dolar" class="col-12 border p-2 apuntar metodos-pago" style="height: 70px;">
+            <p class="fs-4">Efectivo $$$</p>
+          </div>
+          <div id="bolivar" class="col-12 border p-2 apuntar metodos-pago" style="height: 70px;">
+            <p class="fs-4">Efectivo Bs.F</p>
+          </div>
+          <div id="debito" class="col-12 border p-2 apuntar metodos-pago" style="height: 70px;">
+            <p class="fs-4">Debito</p>
+          </div>
+          <div id="pagomovil" class="col-12 border p-2  apuntar metodos-pago" style="height: 70px;">
+            <p class="fs-4">Pago Móvil</p>
+          </div>
+          <div id="credito" class="col-12 border p-2  apuntar metodos-pago" style="height: 70px;">
+            <p class="fs-4">Credito</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-8 p-3">
+        <div class="row g-0">
+          <div class="col-3"><p id="" class="fs-2 fw-bolder sombras">Total: </div>
+          <div class="col-4"><p id="precio-total-dolar" class="fs-3 fw-bolder text-success sombras"></p></div>
+          <div class="col"><p id="precio-total-bolivar" class="fs-3 fw-bolder text-success sombras"></p></div>
+        </div>
+        <div class="row g-0">
+          <div class="col-3"><p id="" class="fs-3  "> T. Abonado: </div>
+          <div class="col-4"><p id="precio-total-abonado-dolar" class="fs-3 fw-bolder text-success sombras"></p></div>
+          <div class="col"><p id="precio-total-abonado-bolivar" class="fs-3 fw-bolder text-success sombras"></p></div>
+        </div>
+        <div class="row g-0">
+          <div class="col-3"><p id="" class="fs-3">Restante: </div>
+          <div class="col-4"><p id="restante-total-dolar" class="fs-4 fw-bolder text-danger sombras"></p></div>
+          <div class="col"><p id="restante-total-bolivar" class="fs-4 fw-bolder text-danger sombras"></p></div>
+        </div>
+        <div class="row g-0 mb-5">
+          <div class="col-4"><p id="" class="fs-4">Credito Disponible: </div>
+          <div class="col-2"><p id="credito-disponible" class="fs-4 fw-bolder text-success sombras"></p></div>
+        </div>
+        <div class="row g-0">
+          <div class="col-1"></div>
+        </div>
+      </div>
+      <div class="col-1"></div>
+    </div>
+    <div class="row">
+      <div class="col-4 border">
+        <div class="row align-items-center">
+          <div class="col-12 border">
+            <p class="fs-4 fw-bolder">Resumen</p>
+          </div>
+          <div id="resumenDiv" class="col-12 border" style="height: 150px; overflow: scroll;">
+          </div>
+          <div class="col-12 ">
+            <button id="boton-pagar" style="width: 100%;" type="button" class="btn btn-secondary rounded-pill"><p class="fs-1">PAGAR</p></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 " style="margin-top: -70px;">
+        <div class="container text-center">
+          <div class="fs-2" id="panel-texto-metodo">Seleccione metodo de pago</div>
+          <div id="panel-bolivares" class="row fs-1 row-cols-2 panel" style="display:none">
+            <div id="boton-panel-b5" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">5 Bs</div>
+            <div id="boton-panel-b10" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">10 Bs</div>
+            <div id="boton-panel-b20" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">20 Bs</div>
+            <div id="boton-panel-b50" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">50 Bs</div>
+            <div id="boton-panel-b100" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">100 Bs</div>
+            <div id="boton-panel-b200" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">200 Bs</div>
+            <div id="boton-panel-b500" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-b">500 Bs</div>
+          </div>
+          <div id="panel-dolares" class="row fs-1 row-cols-2 panel" style="display:none">
+            <div id="btn-panel-d1" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-d">1 $</div>
+            <div id="btn-panel-d20" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-d">20 $</div>
+            <div id="btn-panel-d5" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-d">5 $</div>
+            <div id="btn-panel-d50" class=" height-n col border border-success border-3 apuntar hover-verde btn-panel-d">50 $</div>
+            <div id="btn-panel-d10" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-d">10 $</div>
+            <div id="btn-panel-d100" class="height-n col border border-success border-3 apuntar hover-verde btn-panel-d">100 $</div>
+          </div>
+          <div id="panel-debito" class="row fs-1 row-cols-4 panel" style="display:none">
+            <div id="boton-calculadora-pagar-1" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">1</div>
+            <div id="boton-calculadora-pagar-2" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">2</div>
+            <div id="boton-calculadora-pagar-3" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">3</div>
+            <div id="boton-calculadora-pagar-d5" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">Total</div>
+            <div id="boton-calculadora-pagar-4" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">4</div>
+            <div id="boton-calculadora-pagar-5" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">5</div>
+            <div id="boton-calculadora-pagar-6" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">6</div>
+            <div id="boton-calculadora-pagar-d10" class="col border border-success border-3 apuntar hover-verde "></div>
+            <div id="boton-calculadora-pagar-7" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">7</div>
+            <div id="boton-calculadora-pagar-8" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">8</div>
+            <div id="boton-calculadora-pagar-9" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">9</div>
+            <div id="boton-calculadora-pagar-d20" class="col border border-success border-3 apuntar hover-verde "></div>
+            <div id="boton-calculadora-pagar-coma" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">,</div>
+            <div id="boton-calculadora-pagar-0" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">0</div>
+            <div id="boton-calculadora-pagar-enter" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar">Enter</div>
+            <div id="boton-calculadora-pagar-borrar" class="col border border-success border-3 apuntar hover-verde boton-calculadora-pagar"><img src="{% static '/backspace-fill.svg' %}" /></div>
+          </div>
+          
+          <!-- Nuevo panel para Pago Móvil -->
+          <div id="panel-pagomovil" class="card panel" style="display:none">
+            <div class="card-body">
+              <h5 class="card-title">Pago Móvil</h5>
+              <div class="mb-3">
+                <label for="pagomovil-monto" class="form-label">Monto (Bs)</label>
+                <div class="input-group">
+                  <input type="number" step="0.01" class="form-control" id="pagomovil-monto">
+                  <button id="btn-pagar-total-pagomovil" class="btn btn-success" type="button">Pagar Total</button>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="pagomovil-telefono" class="form-label">Teléfono</label>
+                <input type="text" class="form-control" id="pagomovil-telefono">
+              </div>
+              <div class="mb-3">
+                <label for="pagomovil-referencia" class="form-label">Referencia (4 números)</label>
+                <input type="text" class="form-control" id="pagomovil-referencia" maxlength="4" pattern="\d{4}" inputmode="numeric">
+                <small class="form-text text-muted">Ingrese exactamente 4 números</small>
+              </div>
+              <button id="confirmar-pagomovil" class="btn btn-success">Confirmar Pago</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-1">
+        <div class="col-12 ">
+          <button id="boton-vuelto"  type="button" class="btn btn-secondary rounded-pill"><p class="fs-1">Vuelto</p></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <p id="pedido-id-pagar" style="display:none">{{pedido_id}}</p>
+  <p id="precio-total-pagar" style="display:none">{{precio_total}}</p>
+  <p id="dolar-p-pagar" style="display: none;">{{dolar}}</p>
+  <p id="usuario-pagar" style="display: none;">{{user.get_username}}</p>
+  <p id="cliente-pagar" style="display: none;" >{{cliente.nombre}}</p>
+  <p id="credito-pagar" style="display: none;" >{{credito}}</p>
+  <p id="credito-plazo-pagar" style="display: none;" >{{cliente.credito_plazo}}</p>
+
+  <div class="modal fade" id="autorizacionCreditoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Autorización de Crédito</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="formAutorizacionCredito">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="codigoAutorizacion">Código de Autorización:</label>
+              <input type="password" class="form-control" id="codigoAutorizacion" name="codigoAutorizacion" required>
+            </div>
+            <div id="mensajeError" class="text-danger mt-2" style="display: none;">
+              Código inválido o usuario sin permisos suficientes
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btnValidarAutorizacion">Validar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para cambio excesivo -->
+  <div class="modal fade" id="confirmacionCambioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmación de Pago</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <strong>¡Atención!</strong> El cambio a devolver es muy alto:
+          </div>
+          <div class="text-center mb-3">
+            <h4 id="cambio-excesivo-monto" class="text-danger"></h4>
+          </div>
+          <p class="text-center">¿Está segur@ de que quiere marcar este pedido como pagado?</p>
+          <small class="text-muted">
+            Nota: Verifique que no haya ingresado incorrectamente el monto (ej: 100$ en vez de 100Bs)
+          </small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmarPagoExcesivo">Sí, confirmar pago</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de autorización para saldo a favor -->
+  <div class="modal fade" id="autorizacionVueltoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">⚠️ Autorización Requerida - Saldo a Favor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="formAutorizacionVuelto">
+          <div class="modal-body">
+            <div class="alert alert-warning">
+              <strong>¡Atención!</strong> El cliente tiene un saldo a favor:
+            </div>
+            <div class="text-center mb-3">
+              <h4 id="saldo-favor-monto" class="text-success"></h4>
+            </div>
+            <p class="text-center">
+              <strong>Se requiere autorización de supervisor para procesar este pago.</strong>
+            </p>
+            <div class="form-group">
+              <label for="codigoAutorizacionVuelto">Código de Autorización:</label>
+              <input type="password" class="form-control" id="codigoAutorizacionVuelto" name="codigoAutorizacionVuelto" required>
+            </div>
+            <div id="mensajeErrorVuelto" class="text-danger mt-2" style="display: none;">
+              Código inválido o usuario sin permisos suficientes
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-warning" id="btnValidarAutorizacionVuelto">Autorizar Pago</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endblock content %}
