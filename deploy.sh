@@ -113,15 +113,22 @@ step_4_db_migrations() {
         echo "❌ Dependencias de Python no instaladas. Por favor, complete el Paso 3 primero."
         return 1
     fi
-    sudo -u postgres psql -c "CREATE DATABASE ${DJANGO_PROJECT_NAME}_db;"
-    sudo -u postgres psql -c "CREATE USER ${DJANGO_PROJECT_NAME}_user WITH PASSWORD 'tu_contraseña_segura';"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DJANGO_PROJECT_NAME}_db TO ${DJANGO_PROJECT_NAME}_user;"
+    
+    # Crear base de datos y usuario PostgreSQL con la configuración específica
+    sudo -u postgres psql -c "CREATE DATABASE scgdb;"
+    sudo -u postgres psql -c "CREATE USER scg WITH PASSWORD 'django';"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE scgdb TO scg;"
+    
     cd "$PROJECT_DIR" || return 1
     source "$VENV_NAME/bin/activate"
+    
+    # Instalar psycopg2 para PostgreSQL si no está instalado
+    pip install psycopg2-binary
+    
     "$PYTHON_VERSION" manage.py makemigrations
     "$PYTHON_VERSION" manage.py migrate
     if [ $? -eq 0 ]; then
-        echo "✅ Migraciones de base de datos completadas."
+        echo "✅ Migraciones de base de datos completadas. Base de datos 'scgdb' creada con usuario 'scg'."
         return 0
     else
         echo "❌ Error al ejecutar las migraciones."
