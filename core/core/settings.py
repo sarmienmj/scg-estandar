@@ -268,7 +268,7 @@ for handler in logging.root.handlers:
 # =============================================================================
 
 # Nombre de la sucursal/negocio (configurable)
-SUCURSAL = "SUPERMARKET LOS TACHIRENSES"
+SUCURSAL = "LOS CHAMITOS"
 
 # URL base para la API (usado por serializers para generar URLs de imágenes)
 API_BASE_URL = "http://192.168.1.107:8004"
