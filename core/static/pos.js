@@ -274,7 +274,7 @@ function numerosTeclado(id) {
 function scrollProductoEnPedido(id) {
   position = 0;
   for (i in pedido) {
-    if (pedido[i].uniqueId == id) {
+    if (pedido[i].id == id) {
       position = i;
     }
   }
@@ -487,10 +487,10 @@ function aumentarCantidadUno(id) {
         pedido_cargado_modificado = true;
 
         if (moneda == "USD") {
-          precioUsd = precio * cantidad;
+          precioUsd = producto.precio * cantidad;
           precioBs = precioUsd * bcv;
         } else if (moneda == "BS") {
-          precioBs = precio * cantidad;
+          precioBs = producto.precio * cantidad;
           precioUsd = precioBs / bcv;
         }
 
@@ -505,7 +505,6 @@ function aumentarCantidadUno(id) {
       }
     }
   });
-  cambiarPrecioTotal();
 }
 function mueveReloj() {
   momentoActual = new Date();
@@ -1189,8 +1188,9 @@ $(document).ready(function () {
         pedido.forEach((p) => {
           if (p.id == productoid) {
             scrollProductoEnPedido(productoid);
-          aumentarCantidadUno(productoid);
-          cambiarPrecioProductoPedido(p.uniqueId);
+            aumentarCantidadUno(p.uniqueId);
+            cambiarPrecioProductoPedido(p.uniqueId);
+            cambiarPrecioTotal();
           }
         });
           
