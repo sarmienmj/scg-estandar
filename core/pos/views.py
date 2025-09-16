@@ -31,12 +31,25 @@ import csv
 from django import forms
 from django.contrib import messages
 from django.db.models import Q
+import os
 
-f = open("./core/config.txt", "r")
-config = f.read()
-config_json = json.loads(config)
+# Función para leer configuración
+def leer_configuracion():
+    config_path = "./core/config.txt"
+    with open(config_path, "r") as f:
+        config = f.read()
+    return json.loads(config)
 
+# Función para escribir configuración
+def escribir_configuracion(config_data):
+    config_path = "./core/config.txt"
+    with open(config_path, "w") as f:
+        json.dump(config_data, f, indent=3)
+
+# Cargar configuración inicial
+config_json = leer_configuracion()
 IMPRESORAS = config_json["IMPRESORAS"]
+IMPRESORAS_ETIQUETAS = config_json.get("IMPRESORAS_ETIQUETAS", {})
 BALANZAS = config_json["BALANZAS"]
 
 # Función helper para manejar conexiones socket de forma robusta
@@ -1041,7 +1054,43 @@ class Home(LoginRequiredMixin,View):
     
 class PrePesados(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        context = {}
+        # Cargar productos directamente del modelo
+        productos = Producto.objects.all().order_by('nombre')
+        
+        # Formatear productos para el frontend
+        productos_data = []
+        for producto in productos:
+            # Manejar imagen del producto
+            image_url = '/media/logo.png'  # imagen por defecto
+            if producto.imagen:
+                try:
+                    image_url = producto.imagen.url
+                except:
+                    # Si hay error al obtener la URL, usar imagen por defecto basada en el nombre
+                    encoded_name = producto.nombre.replace(' ', '_')
+                    image_url = f'/media/{encoded_name}.png'
+            else:
+                # Si no tiene imagen, intentar con el nombre del producto
+                encoded_name = producto.nombre.replace(' ', '_')
+                image_url = f'/media/{encoded_name}.png'
+            
+            # Convertir unidad 'K' a 'KG' para mejor visualización
+            unit_display = 'KG' if producto.unidad == 'K' else producto.unidad
+            
+            productos_data.append({
+                'id': producto.id,
+                'title': producto.nombre,
+                'price': float(producto.precio_detal),
+                'currency': producto.moneda,  # Usar la moneda del producto
+                'unit': unit_display,
+                'image': image_url
+            })
+        
+        import json
+        context = {
+            'productos': productos_data,
+            'productos_json': json.dumps(productos_data)
+        }
         return render(request, 'pre_pesados.html', context)
 
 class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
@@ -1062,13 +1111,22 @@ class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
         resto = suma % 10
         return str((10 - resto) % 10)
     
-    def generar_codigo_ean13(self, producto_id, peso_kg):
-        """Genera código EAN13: 21 + 5 dígitos producto + 5 dígitos peso + dígito verificador"""
+    def generar_codigo_ean13(self, producto_id, peso_kg, unidad='K'):
+        """Genera código EAN13: 21 + 5 dígitos producto + 5 dígitos peso/cantidad + dígito verificador"""
         # Formatear producto ID a 5 dígitos
         producto_str = f"{producto_id:05d}"
         
-        # Convertir peso a gramos y formatear a 5 dígitos
-        peso_gramos = int(peso_kg * 100)  # Convertir kg a centenas de gramos
+        # Truncar peso/cantidad según la unidad
+        import math
+        if unidad == 'U':
+            # Para productos unitarios, truncar a entero
+            peso_truncado = math.floor(peso_kg)
+            peso_gramos = int(peso_truncado * 100)  # Multiplicar por 100 para compatibilidad
+        else:
+            # Para productos por peso, truncar a 3 decimales sin redondear
+            peso_truncado = math.floor(peso_kg * 1000) / 1000  # Truncar a 3 decimales
+            peso_gramos = int(peso_truncado * 100)  # Convertir kg a centenas de gramos
+        
         peso_str = f"{peso_gramos:05d}"
         
         # Construir los primeros 12 dígitos
@@ -1085,11 +1143,20 @@ class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
             nombre = data.get('nombre', '').strip()[:25]  # Limitar para que quepa en etiqueta
             moneda = (data.get('moneda', 'USD') or 'USD').upper()
             unidad = (data.get('unidad', 'K') or 'K').upper()
-            impresora = "192.168.1.145"
+            impresora = data.get('impresora', '').strip()  # Usar la impresora enviada por el cliente
             copias = int(data.get('copias', 1))
             producto_id = int(data.get('producto_id'))
             precio_unit = float(data.get('precio_unit', 0))
-            peso = float(data.get('peso', 0))
+            peso_original = float(data.get('peso', 0))
+            
+            # Truncar peso según la unidad
+            import math
+            if unidad == 'U':
+                # Para productos unitarios, truncar a entero
+                peso = math.floor(peso_original)
+            else:
+                # Para productos por peso, truncar a 3 decimales sin redondear
+                peso = math.floor(peso_original * 1000) / 1000
 
             from django.conf import settings
             negocio = settings.SUCURSAL
@@ -1098,24 +1165,24 @@ class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
             from datetime import datetime
             fecha_actual = datetime.now().strftime("%d/%m/%y")
             
-            # Calcular precio total
-            precio_total = precio_unit * peso
-            
-            # Convertir a dólares si es necesario
-            precio_total_usd = precio_total
+            # Convertir precio unitario a dólares si es necesario
+            precio_unit_usd = precio_unit
             if moneda == 'BS':
                 try:
                     from .models import ValorDolar
                     valor_dolar = ValorDolar.objects.first()
                     if valor_dolar and valor_dolar.valor > 0:
-                        precio_total_usd = precio_total / valor_dolar.valor
+                        precio_unit_usd = precio_unit / valor_dolar.valor
                     else:
-                        precio_total_usd = precio_total / 1  # Valor por defecto
+                        precio_unit_usd = precio_unit / 36  # Valor por defecto si no hay tasa
                 except:
-                    precio_total_usd = precio_total / 1  # Valor por defecto
+                    precio_unit_usd = precio_unit / 36  # Valor por defecto si hay error
+            
+            # Calcular precio total en dólares
+            precio_total_usd = precio_unit_usd * peso
             
             # Generar código EAN13
-            codigo_barras = self.generar_codigo_ean13(producto_id, peso)
+            codigo_barras = self.generar_codigo_ean13(producto_id, peso, unidad)
             
             # Coordenadas para etiqueta 58mm x 32mm (aprox 464x256 dots a 200 DPI)
             # Ajustando para impresora térmica típica
@@ -1129,7 +1196,7 @@ class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
                 "CLS",
                 
                 # Nombre del negocio (centrado, parte superior)
-                f'TEXT 28,20,"3",2,1,1,"{negocio}"',
+                f'TEXT 10,17,"3",0,1,1,"{negocio}"',
                 
                 # Barra separadora
                 'BAR 0,46,500,3',
@@ -1137,21 +1204,21 @@ class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
                 # Encabezados de las columnas
                 f'TEXT 10,54,"2",0,1,1,"Fecha:"',
                 f'TEXT 170,54,"2",0,1,1,"Precio:"',
-                f'TEXT 300,54,"2",0,1,1,"Peso:"',
+                f'TEXT 314,54,"2",0,1,1,"{"Cant:" if unidad == "U" else "Peso:"}"',
                 
                 # Título del producto (limitado a 20 caracteres)
-                f'TEXT 20,110,"4",3,1,1,"{nombre[:20]}"',
+                f'TEXT 15,125,"4",0,1,1,"{nombre[:20]}"',
                 
                 # Datos de las columnas
-                f'TEXT 10,74,"2",0,1,1,"{fecha_actual}"',
-                f'TEXT 170,74,"2",0,1,1,"{precio_unit:.0f}$/Kg"',
-                f'TEXT 300,74,"3",0,1,1,"{peso:.2f} kg"',
+                f'TEXT 10,78,"2",0,1,1,"{fecha_actual}"',
+                f'TEXT 170,78,"2",0,1,1,"{precio_unit_usd:.2f}$/{"U" if unidad == "U" else "Kg"}"',
+                f'TEXT 310,78,"3",0,1,1,"{peso:.0f} U"' if unidad == "U" else f'TEXT 310,78,"3",0,1,1,"{peso:.3f} kg"',
                 'BAR 0,106,500,3',
                 # Nueva sección dividida en dos columnas
                 # Columna izquierda: Precio total en dólares (letra grande) con BOX
-                f'BOX 20,165,230,270,1',
-                f'TEXT 30,175,"2",0,1,1,"TOTAL"',
-                f'TEXT 27,194,"5",0,1,1,"${precio_total:.2f}"',
+                f'BOX 20,165,230,240,2',
+                f'TEXT 30,175,"2",0,1,1,"TOTAL REF"',
+                f'TEXT 50,200,"4",0,1,1,"${precio_total_usd:.2f}"',
                 
                 # Código de barras EAN13 al lado derecho del BOX
                 f'BARCODE 250,175,"EAN13",60,0,0,2,2,"{codigo_barras}"',
@@ -1168,14 +1235,31 @@ class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
             print(comandos)
             print("="*50)
             print(f"Código de barras: {codigo_barras}")
+            print(f"Unidad: {unidad} ({'Unitario' if unidad == 'U' else 'Por Kilogramo'})")
+            print(f"Peso original: {peso_original:.4f} {'U' if unidad == 'U' else 'kg'}")
+            if unidad == 'U':
+                print(f"Cantidad truncada: {peso:.0f} U")
+            else:
+                print(f"Peso truncado: {peso:.3f} kg")
+            print(f"Precio unitario USD: {precio_unit_usd:.2f}$/{'U' if unidad == 'U' else 'Kg'}")
             print(f"Precio total USD: {precio_total_usd:.2f}")
+            print(f"Moneda original: {moneda}")
             print(f"Fecha: {fecha_actual}")
+            print(f"Impresora: {impresora}")
             print("="*50 + "\n")
             
-            # Comentado temporalmente para depuración
+            # Validar que se haya proporcionado una impresora
+            if not impresora:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'No se ha seleccionado una impresora de etiquetas. Configure una impresora en el sistema.'
+                }, status=400)
+            
+            # Enviar comando a la impresora
             def enviar():
                 conectar_socket_seguro(ip=impresora, puerto=9100, datos=comandos, timeout=3, es_balanza=False)
-            # import threading
+            
+            import threading
             hilo = threading.Thread(target=enviar, daemon=True)
             hilo.start()
 
@@ -6084,8 +6168,15 @@ class BalanzaImpresoraIp(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin,View):
         return HttpResponse(200)
 
 # Nueva vista principal de configuración
-class ConfiguracionDispositivos(LoginRequiredMixin, View):
+class ConfiguracionDispositivos(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+        # Recargar configuración para obtener datos actualizados
+        global IMPRESORAS, IMPRESORAS_ETIQUETAS, BALANZAS
+        config_json = leer_configuracion()
+        IMPRESORAS = config_json["IMPRESORAS"]
+        IMPRESORAS_ETIQUETAS = config_json.get("IMPRESORAS_ETIQUETAS", {})
+        BALANZAS = config_json["BALANZAS"]
+        
         # Cargar datos básicos sin verificar conexión
         impresoras_estado = {}
         for imp_id, imp_ip in IMPRESORAS.items():
@@ -6093,6 +6184,14 @@ class ConfiguracionDispositivos(LoginRequiredMixin, View):
                 'ip': imp_ip,
                 'online': None,  # Estado inicial desconocido
                 'nombre': f"Impresora {imp_id}"
+            }
+        
+        impresoras_etiquetas_estado = {}
+        for imp_id, imp_ip in IMPRESORAS_ETIQUETAS.items():
+            impresoras_etiquetas_estado[imp_id] = {
+                'ip': imp_ip,
+                'online': None,  # Estado inicial desconocido
+                'nombre': f"Impresora de Etiquetas {imp_id}"
             }
         
         balanzas_estado = {}
@@ -6103,9 +6202,16 @@ class ConfiguracionDispositivos(LoginRequiredMixin, View):
                 'nombre': f"Balanza {bal_id}"
             }
         
+        # Verificar si el usuario puede gestionar dispositivos
+        puede_gestionar = (
+            request.user.groups.filter(name__in=['ADMINISTRADOR', 'SUPERVISOR']).exists()
+        )
+        
         context = {
             'impresoras': impresoras_estado,
-            'balanzas': balanzas_estado
+            'impresoras_etiquetas': impresoras_etiquetas_estado,
+            'balanzas': balanzas_estado,
+            'puede_gestionar': puede_gestionar
         }
         return render(request, 'configuracion_dispositivos.html', context)
 
@@ -6255,3 +6361,547 @@ class ProbarBalanza(LoginRequiredMixin, View):
             response_data = {'success': False, 'message': f'Error interno del servidor: {str(e)}'}
             print(f"❌ DEBUG ProbarBalanza: Devolviendo error de excepción: {response_data}")
             return JsonResponse(response_data)
+
+# === VISTAS PARA GESTIÓN DE CONFIGURACIÓN DE DISPOSITIVOS ===
+
+# Vista para agregar impresora
+class AgregarImpresora(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            imp_id = request.POST.get('imp_id', '').strip()
+            imp_ip = request.POST.get('imp_ip', '').strip()
+            
+            if not imp_id or not imp_ip:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'ID e IP son requeridos'
+                })
+            
+            # Validar formato IP
+            import re
+            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+            if not re.match(ip_pattern, imp_ip):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Formato de IP inválido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si el ID ya existe
+            if imp_id in config_data["IMPRESORAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una impresora con ID: {imp_id}'
+                })
+            
+            # Verificar si la IP ya existe
+            if imp_ip in config_data["IMPRESORAS"].values():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una impresora con IP: {imp_ip}'
+                })
+            
+            # Agregar nueva impresora
+            config_data["IMPRESORAS"][imp_id] = imp_ip
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global IMPRESORAS
+            IMPRESORAS = config_data["IMPRESORAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Impresora {imp_id} agregada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al agregar impresora: {str(e)}'
+            })
+
+# Vista para eliminar impresora
+class EliminarImpresora(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            imp_id = request.POST.get('imp_id', '').strip()
+            
+            if not imp_id:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'ID de impresora requerido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si existe
+            if imp_id not in config_data["IMPRESORAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'No existe impresora con ID: {imp_id}'
+                })
+            
+            # Eliminar impresora
+            del config_data["IMPRESORAS"][imp_id]
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global IMPRESORAS
+            IMPRESORAS = config_data["IMPRESORAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Impresora {imp_id} eliminada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al eliminar impresora: {str(e)}'
+            })
+
+# Vista para agregar balanza
+class AgregarBalanza(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            bal_id = request.POST.get('bal_id', '').strip()
+            bal_ip = request.POST.get('bal_ip', '').strip()
+            
+            if not bal_id or not bal_ip:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'ID e IP son requeridos'
+                })
+            
+            # Validar formato IP
+            import re
+            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+            if not re.match(ip_pattern, bal_ip):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Formato de IP inválido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si el ID ya existe
+            if bal_id in config_data["BALANZAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una balanza con ID: {bal_id}'
+                })
+            
+            # Verificar si la IP ya existe
+            if bal_ip in config_data["BALANZAS"].values():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una balanza con IP: {bal_ip}'
+                })
+            
+            # Agregar nueva balanza
+            config_data["BALANZAS"][bal_id] = bal_ip
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global BALANZAS
+            BALANZAS = config_data["BALANZAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Balanza {bal_id} agregada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al agregar balanza: {str(e)}'
+            })
+
+# Vista para eliminar balanza
+class EliminarBalanza(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            bal_id = request.POST.get('bal_id', '').strip()
+            
+            if not bal_id:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'ID de balanza requerido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si existe
+            if bal_id not in config_data["BALANZAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'No existe balanza con ID: {bal_id}'
+                })
+            
+            # Eliminar balanza
+            del config_data["BALANZAS"][bal_id]
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global BALANZAS
+            BALANZAS = config_data["BALANZAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Balanza {bal_id} eliminada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al eliminar balanza: {str(e)}'
+            })
+
+# Vista para editar impresora
+class EditarImpresora(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            imp_id_original = request.POST.get('imp_id_original', '').strip()
+            imp_id_nuevo = request.POST.get('imp_id_nuevo', '').strip()
+            imp_ip_nueva = request.POST.get('imp_ip_nueva', '').strip()
+            
+            if not imp_id_original or not imp_id_nuevo or not imp_ip_nueva:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Todos los campos son requeridos'
+                })
+            
+            # Validar formato IP
+            import re
+            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+            if not re.match(ip_pattern, imp_ip_nueva):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Formato de IP inválido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si la impresora original existe
+            if imp_id_original not in config_data["IMPRESORAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'No existe impresora con ID: {imp_id_original}'
+                })
+            
+            # Si el ID cambió, verificar que el nuevo no exista
+            if imp_id_original != imp_id_nuevo and imp_id_nuevo in config_data["IMPRESORAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una impresora con ID: {imp_id_nuevo}'
+                })
+            
+            # Verificar si la nueva IP ya existe en otra impresora
+            for id_existente, ip_existente in config_data["IMPRESORAS"].items():
+                if ip_existente == imp_ip_nueva and id_existente != imp_id_original:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Ya existe una impresora con IP: {imp_ip_nueva}'
+                    })
+            
+            # Eliminar la entrada original si el ID cambió
+            if imp_id_original != imp_id_nuevo:
+                del config_data["IMPRESORAS"][imp_id_original]
+            
+            # Agregar/actualizar con los nuevos valores
+            config_data["IMPRESORAS"][imp_id_nuevo] = imp_ip_nueva
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global IMPRESORAS
+            IMPRESORAS = config_data["IMPRESORAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Impresora actualizada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al editar impresora: {str(e)}'
+            })
+
+# Vista para editar balanza
+class EditarBalanza(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            bal_id_original = request.POST.get('bal_id_original', '').strip()
+            bal_id_nuevo = request.POST.get('bal_id_nuevo', '').strip()
+            bal_ip_nueva = request.POST.get('bal_ip_nueva', '').strip()
+            
+            if not bal_id_original or not bal_id_nuevo or not bal_ip_nueva:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Todos los campos son requeridos'
+                })
+            
+            # Validar formato IP
+            import re
+            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+            if not re.match(ip_pattern, bal_ip_nueva):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Formato de IP inválido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si la balanza original existe
+            if bal_id_original not in config_data["BALANZAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'No existe balanza con ID: {bal_id_original}'
+                })
+            
+            # Si el ID cambió, verificar que el nuevo no exista
+            if bal_id_original != bal_id_nuevo and bal_id_nuevo in config_data["BALANZAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una balanza con ID: {bal_id_nuevo}'
+                })
+            
+            # Verificar si la nueva IP ya existe en otra balanza
+            for id_existente, ip_existente in config_data["BALANZAS"].items():
+                if ip_existente == bal_ip_nueva and id_existente != bal_id_original:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Ya existe una balanza con IP: {bal_ip_nueva}'
+                    })
+            
+            # Eliminar la entrada original si el ID cambió
+            if bal_id_original != bal_id_nuevo:
+                del config_data["BALANZAS"][bal_id_original]
+            
+            # Agregar/actualizar con los nuevos valores
+            config_data["BALANZAS"][bal_id_nuevo] = bal_ip_nueva
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global BALANZAS
+            BALANZAS = config_data["BALANZAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Balanza actualizada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al editar balanza: {str(e)}'
+            })
+
+# === VISTAS PARA GESTIÓN DE IMPRESORAS DE ETIQUETAS ===
+
+# Vista para agregar impresora de etiquetas
+class AgregarImpresoraEtiqueta(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            imp_id = request.POST.get('imp_id', '').strip()
+            imp_ip = request.POST.get('imp_ip', '').strip()
+            
+            if not imp_id or not imp_ip:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'ID e IP son requeridos'
+                })
+            
+            # Validar formato IP
+            import re
+            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+            if not re.match(ip_pattern, imp_ip):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Formato de IP inválido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Asegurar que existe la sección IMPRESORAS_ETIQUETAS
+            if "IMPRESORAS_ETIQUETAS" not in config_data:
+                config_data["IMPRESORAS_ETIQUETAS"] = {}
+            
+            # Verificar si el ID ya existe
+            if imp_id in config_data["IMPRESORAS_ETIQUETAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una impresora de etiquetas con ID: {imp_id}'
+                })
+            
+            # Verificar si la IP ya existe
+            if imp_ip in config_data["IMPRESORAS_ETIQUETAS"].values():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una impresora de etiquetas con IP: {imp_ip}'
+                })
+            
+            # Agregar nueva impresora de etiquetas
+            config_data["IMPRESORAS_ETIQUETAS"][imp_id] = imp_ip
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global IMPRESORAS_ETIQUETAS
+            IMPRESORAS_ETIQUETAS = config_data["IMPRESORAS_ETIQUETAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Impresora de etiquetas {imp_id} agregada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al agregar impresora de etiquetas: {str(e)}'
+            })
+
+# Vista para eliminar impresora de etiquetas
+class EliminarImpresoraEtiqueta(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            imp_id = request.POST.get('imp_id', '').strip()
+            
+            if not imp_id:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'ID de impresora de etiquetas requerido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Verificar si existe la sección
+            if "IMPRESORAS_ETIQUETAS" not in config_data:
+                config_data["IMPRESORAS_ETIQUETAS"] = {}
+            
+            # Verificar si existe
+            if imp_id not in config_data["IMPRESORAS_ETIQUETAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'No existe impresora de etiquetas con ID: {imp_id}'
+                })
+            
+            # Eliminar impresora de etiquetas
+            del config_data["IMPRESORAS_ETIQUETAS"][imp_id]
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global IMPRESORAS_ETIQUETAS
+            IMPRESORAS_ETIQUETAS = config_data["IMPRESORAS_ETIQUETAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Impresora de etiquetas {imp_id} eliminada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al eliminar impresora de etiquetas: {str(e)}'
+            })
+
+# Vista para editar impresora de etiquetas
+class EditarImpresoraEtiqueta(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            imp_id_original = request.POST.get('imp_id_original', '').strip()
+            imp_id_nuevo = request.POST.get('imp_id_nuevo', '').strip()
+            imp_ip_nueva = request.POST.get('imp_ip_nueva', '').strip()
+            
+            if not imp_id_original or not imp_id_nuevo or not imp_ip_nueva:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Todos los campos son requeridos'
+                })
+            
+            # Validar formato IP
+            import re
+            ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+            if not re.match(ip_pattern, imp_ip_nueva):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Formato de IP inválido'
+                })
+            
+            # Leer configuración actual
+            config_data = leer_configuracion()
+            
+            # Asegurar que existe la sección
+            if "IMPRESORAS_ETIQUETAS" not in config_data:
+                config_data["IMPRESORAS_ETIQUETAS"] = {}
+            
+            # Verificar si la impresora original existe
+            if imp_id_original not in config_data["IMPRESORAS_ETIQUETAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'No existe impresora de etiquetas con ID: {imp_id_original}'
+                })
+            
+            # Si el ID cambió, verificar que el nuevo no exista
+            if imp_id_original != imp_id_nuevo and imp_id_nuevo in config_data["IMPRESORAS_ETIQUETAS"]:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Ya existe una impresora de etiquetas con ID: {imp_id_nuevo}'
+                })
+            
+            # Verificar si la nueva IP ya existe en otra impresora
+            for id_existente, ip_existente in config_data["IMPRESORAS_ETIQUETAS"].items():
+                if ip_existente == imp_ip_nueva and id_existente != imp_id_original:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Ya existe una impresora de etiquetas con IP: {imp_ip_nueva}'
+                    })
+            
+            # Eliminar la entrada original si el ID cambió
+            if imp_id_original != imp_id_nuevo:
+                del config_data["IMPRESORAS_ETIQUETAS"][imp_id_original]
+            
+            # Agregar/actualizar con los nuevos valores
+            config_data["IMPRESORAS_ETIQUETAS"][imp_id_nuevo] = imp_ip_nueva
+            
+            # Escribir configuración
+            escribir_configuracion(config_data)
+            
+            # Actualizar variables globales
+            global IMPRESORAS_ETIQUETAS
+            IMPRESORAS_ETIQUETAS = config_data["IMPRESORAS_ETIQUETAS"]
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Impresora de etiquetas actualizada exitosamente'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error al editar impresora de etiquetas: {str(e)}'
+            })

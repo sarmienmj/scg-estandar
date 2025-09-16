@@ -62,6 +62,18 @@
     <div class="page-card">
       <h1 class="page-title">Pre Pesados</h1>
 
+      <!-- Estado de Impresora de Etiquetas -->
+      <div class="alert alert-info d-flex justify-content-between align-items-center" id="estado-impresora-etiqueta">
+        <div>
+          <i class="fas fa-tags me-2"></i>
+          <strong>Impresora de Etiquetas:</strong> 
+          <span id="impresora-etiqueta-actual">No seleccionada</span>
+        </div>
+        <a href="{% url 'pos:configuracion-dispositivos' %}" class="btn btn-sm btn-outline-primary">
+          <i class="fas fa-cog"></i> Configurar
+        </a>
+      </div>
+
       <!-- Buscador -->
       <div class="mb-3">
         <div class="input-group">
@@ -112,6 +124,65 @@
       window.location.href = document.getElementById('url-home').textContent;
     });
     actualizarReloj(); actualizarFecha(); setInterval(actualizarReloj, 1000);
+
+    // ====== Verificar impresora de etiquetas seleccionada ======
+    function verificarImpresoraEtiqueta() {
+      const impresoraSeleccionada = localStorage.getItem('impresoraEtiquetas');
+      const elementoEstado = document.getElementById('impresora-etiqueta-actual');
+      const elementoContenedor = document.getElementById('estado-impresora-etiqueta');
+      
+      if (impresoraSeleccionada) {
+        const impresora = JSON.parse(impresoraSeleccionada);
+        elementoEstado.textContent = `${impresora.nombre} (${impresora.ip})`;
+        elementoContenedor.className = 'alert alert-success d-flex justify-content-between align-items-center';
+      } else {
+        elementoEstado.textContent = 'No seleccionada';
+        elementoContenedor.className = 'alert alert-warning d-flex justify-content-between align-items-center';
+      }
+    }
+
+    // Migrar datos existentes y verificar al cargar la página
+    migrarImpresoraEtiquetas();
+    verificarImpresoraEtiqueta();
+
+    // ====== Migrar datos existentes ======
+    function migrarImpresoraEtiquetas() {
+      const impresoraAntigua = localStorage.getItem('impresoraEtiquetaSeleccionada');
+      const impresoraNueva = localStorage.getItem('impresoraEtiquetas');
+      
+      // Si existe el campo antiguo pero no el nuevo, migrar
+      if (impresoraAntigua && !impresoraNueva) {
+        localStorage.setItem('impresoraEtiquetas', impresoraAntigua);
+        localStorage.removeItem('impresoraEtiquetaSeleccionada');
+        console.log('Migrado campo impresoraEtiquetaSeleccionada -> impresoraEtiquetas');
+      }
+    }
+
+    // ====== Función para obtener impresora de etiquetas ======
+    function getImpresoraEtiquetaSeleccionada() {
+      const impresoraSeleccionada = localStorage.getItem('impresoraEtiquetas');
+      if (impresoraSeleccionada) {
+        const impresora = JSON.parse(impresoraSeleccionada);
+        return impresora.ip;
+      }
+      return ''; // Retornar cadena vacía si no hay impresora seleccionada
+    }
+
+    // ====== Función helper para CSRF token ======
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
 
     // ====== Selector de productos ======
     const urlProductos = document.getElementById('url-productos').textContent;
@@ -202,16 +273,16 @@
       debounceId = setTimeout(() => filtrar(inputBuscar.value), 160);
     });
 
-    async function cargarProductos(){
+    function cargarProductos(){
       try{
         mostrarLoading(true);
-        const res = await fetch(urlProductos, { headers: { 'Accept': 'application/json' }});
-        if (!res.ok) throw new Error('No se pudo cargar productos');
-        productos = await res.json();
+        // Cargar productos directamente desde el contexto de Django
+        productos = {{ productos_json|safe }};
+        console.log('Productos cargados:', productos.length);
         render(productos);
       }catch(err){
         mostrarEmpty(true);
-        console.error(err);
+        console.error('Error al cargar productos:', err);
       }finally{
         mostrarLoading(false);
       }
@@ -280,6 +351,13 @@
           const input = document.getElementById('input-peso');
           input.value = Number(peso).toFixed(2);
           
+          // Verificar que haya una impresora de etiquetas seleccionada
+          const impresoraSeleccionada = getImpresoraEtiquetaSeleccionada();
+          if (!impresoraSeleccionada) {
+            alert('Por favor seleccione una impresora de etiquetas en la configuración antes de imprimir.');
+            return;
+          }
+          
           // Impresión automática cuando se recibe el peso de la balanza
           try {
             const resp = await fetch('{% url "pos:imprimir-etiqueta-tspl" %}', {
@@ -295,7 +373,7 @@
                 'unidad': String(productoSeleccionado?.unit || 'K'),
                 'peso': String(peso.toFixed(2)),
                 'producto_id': String(productoSeleccionado?.id || 0),
-                'impresora': localStorage.getItem('impresora') || '',
+                'impresora': getImpresoraEtiquetaSeleccionada(),
                 'copias': '1'
               })
             });
@@ -325,6 +403,14 @@
           input.focus();
           return;
         }
+        
+        // Verificar que haya una impresora de etiquetas seleccionada
+        const impresoraSeleccionada = getImpresoraEtiquetaSeleccionada();
+        if (!impresoraSeleccionada) {
+          alert('Por favor seleccione una impresora de etiquetas en la configuración antes de imprimir.');
+          return;
+        }
+        
         // Enviar impresión TSPL asíncrona
         try {
           const resp = await fetch('{% url "pos:imprimir-etiqueta-tspl" %}', {
@@ -340,7 +426,7 @@
               'unidad': String(productoSeleccionado?.unit || 'K'),
               'peso': String(val),
               'producto_id': String(productoSeleccionado?.id || 0),
-              'impresora': localStorage.getItem('impresora') || '',
+              'impresora': getImpresoraEtiquetaSeleccionada(),
               'copias': '1'
             })
           });

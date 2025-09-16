@@ -97,6 +97,21 @@ urlpatterns = [
     path('configuracion/verificar-estado/', VerificarEstadoDispositivos.as_view(), name='verificar-estado-dispositivos'),
     path('configuracion/probar-impresora/', ProbarImpresora.as_view(), name='probar-impresora'),
     path('configuracion/probar-balanza/', ProbarBalanza.as_view(), name='probar-balanza'),
+    
+    # URLs para gestión de impresoras
+    path('agregar-impresora/', AgregarImpresora.as_view(), name='agregar-impresora'),
+    path('eliminar-impresora/', EliminarImpresora.as_view(), name='eliminar-impresora'),
+    path('editar-impresora/', EditarImpresora.as_view(), name='editar-impresora'),
+    
+    # URLs para gestión de balanzas
+    path('agregar-balanza/', AgregarBalanza.as_view(), name='agregar-balanza'),
+    path('eliminar-balanza/', EliminarBalanza.as_view(), name='eliminar-balanza'),
+    path('editar-balanza/', EditarBalanza.as_view(), name='editar-balanza'),
+    
+    # URLs para gestión de impresoras de etiquetas
+    path('agregar-impresora-etiqueta/', AgregarImpresoraEtiqueta.as_view(), name='agregar-impresora-etiqueta'),
+    path('eliminar-impresora-etiqueta/', EliminarImpresoraEtiqueta.as_view(), name='eliminar-impresora-etiqueta'),
+    path('editar-impresora-etiqueta/', EditarImpresoraEtiqueta.as_view(), name='editar-impresora-etiqueta'),
 
     path('volver-pos/', VolverPOS.as_view(), name='volver-pos'),
 

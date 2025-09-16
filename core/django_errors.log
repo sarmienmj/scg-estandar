@@ -946,3 +946,5 @@ django.urls.exceptions.NoReverseMatch: Reverse for 'dolar' with no arguments not
 ERROR 2025-09-13 05:14:07,469 log 9992 20304 Internal Server Error: /pos/api/productos/
 ERROR 2025-09-13 05:14:17,699 log 9992 20304 Internal Server Error: /pos/api/productos/
 ERROR 2025-09-13 05:14:33,407 log 12588 6900 Internal Server Error: /pos/api/productos/
+ERROR 2025-09-15 22:17:51,257 log 12456 17424 Internal Server Error: /pos/api/productos/
+ERROR 2025-09-15 22:21:10,404 log 19728 3988 Internal Server Error: /pos/api/productos/

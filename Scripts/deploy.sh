@@ -5,8 +5,9 @@
 
 # --- VARIABLES DE CONFIGURACIÓN ---
 # Edita estas variables con la información de tu proyecto
-GITHUB_REPO="https://github.com/tu-usuario/tu-repositorio-django.git"
+GITHUB_REPO="https://github.com/sarmienmj/scg-estandar.git"
 PROJECT_DIR="/var/www/scg"
+DJANGO_APP_DIR="core" # La carpeta que contiene manage.py
 DJANGO_PROJECT_NAME="core" # Nombre de la carpeta que contiene settings.py
 VENV_NAME="venv"
 PYTHON_VERSION="python3"
@@ -61,7 +62,7 @@ show_status() {
 step_1_install_deps() {
     echo "--- Paso 1: Instalando dependencias del sistema ---"
     sudo apt-get update
-    sudo apt-get install -y git "$PYTHON_VERSION-venv" python3-pip postgresql postgresql-contrib nginx
+    sudo apt-get install -y git "$PYTHON_VERSION-venv" python3-pip postgresql postgresql-contrib nginx libpq-dev
     if [ $? -eq 0 ]; then
         echo "✅ Dependencias del sistema instaladas correctamente."
         return 0
@@ -97,7 +98,7 @@ step_3_install_python_deps() {
     "$PYTHON_VERSION" -m venv "$VENV_NAME"
     source "$VENV_NAME/bin/activate"
     pip install -r requirements.txt
-    pip install gunicorn uvicorn
+    pip install gunicorn uvicorn psycopg2-binary
     if [ $? -eq 0 ]; then
         echo "✅ Dependencias de Python instaladas."
         return 0
@@ -114,21 +115,21 @@ step_4_db_migrations() {
         return 1
     fi
     
-    # Crear base de datos y usuario PostgreSQL con la configuración específica
+    # Crear base de datos y usuario PostgreSQL según configuración de settings.py
     sudo -u postgres psql -c "CREATE DATABASE scgdb;"
     sudo -u postgres psql -c "CREATE USER scg WITH PASSWORD 'django';"
     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE scgdb TO scg;"
+    sudo -u postgres psql -c "ALTER USER scg CREATEDB;"
+    sudo -u postgres psql -d scgdb -c "GRANT ALL ON SCHEMA public TO scg;"
+    sudo -u postgres psql -d scgdb -c "GRANT CREATE ON SCHEMA public TO scg;"
     
-    cd "$PROJECT_DIR" || return 1
-    source "$VENV_NAME/bin/activate"
-    
-    # Instalar psycopg2 para PostgreSQL si no está instalado
-    pip install psycopg2-binary
+    cd "$PROJECT_DIR/$DJANGO_APP_DIR" || return 1
+    source "$PROJECT_DIR/$VENV_NAME/bin/activate"
     
     "$PYTHON_VERSION" manage.py makemigrations
     "$PYTHON_VERSION" manage.py migrate
     if [ $? -eq 0 ]; then
-        echo "✅ Migraciones de base de datos completadas. Base de datos 'scgdb' creada con usuario 'scg'."
+        echo "✅ Migraciones de base de datos completadas."
         return 0
     else
         echo "❌ Error al ejecutar las migraciones."
@@ -142,8 +143,8 @@ step_5_create_superuser() {
         echo "❌ Dependencias de Python no instaladas. Por favor, complete el Paso 3 primero."
         return 1
     fi
-    cd "$PROJECT_DIR" || return 1
-    source "$VENV_NAME/bin/activate"
+    cd "$PROJECT_DIR/$DJANGO_APP_DIR" || return 1
+    source "$PROJECT_DIR/$VENV_NAME/bin/activate"
     echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='$SUPERUSER_USERNAME').exists() or User.objects.create_superuser('$SUPERUSER_USERNAME', 'admin@example.com', '$SUPERUSER_PASSWORD')" | "$PYTHON_VERSION" manage.py shell
     if [ $? -eq 0 ]; then
         echo "✅ Superusuario '$SUPERUSER_USERNAME' creado correctamente."
@@ -160,8 +161,8 @@ step_6_create_groups() {
         echo "❌ Dependencias de Python no instaladas. Por favor, complete el Paso 3 primero."
         return 1
     fi
-    cd "$PROJECT_DIR" || return 1
-    source "$VENV_NAME/bin/activate"
+    cd "$PROJECT_DIR/$DJANGO_APP_DIR" || return 1
+    source "$PROJECT_DIR/$VENV_NAME/bin/activate"
     for group in "${DJANGO_GROUPS[@]}"; do
         echo "from django.contrib.auth.models import Group; Group.objects.get_or_create(name='$group')" | "$PYTHON_VERSION" manage.py shell
     done
@@ -180,8 +181,8 @@ step_7_collect_static() {
         echo "❌ Dependencias de Python no instaladas. Por favor, complete el Paso 3 primero."
         return 1
     fi
-    cd "$PROJECT_DIR" || return 1
-    source "$VENV_NAME/bin/activate"
+    cd "$PROJECT_DIR/$DJANGO_APP_DIR" || return 1
+    source "$PROJECT_DIR/$VENV_NAME/bin/activate"
     "$PYTHON_VERSION" manage.py collectstatic --noinput
     mkdir -p "$MEDIA_ROOT_DIR"
     echo "✅ Archivos estáticos y de media recolectados."
@@ -202,7 +203,7 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=$PROJECT_DIR
+WorkingDirectory=$PROJECT_DIR/$DJANGO_APP_DIR
 ExecStart=$PROJECT_DIR/$VENV_NAME/bin/gunicorn --workers 3 --bind unix:$PROJECT_DIR/$DJANGO_PROJECT_NAME.sock $DJANGO_PROJECT_NAME.asgi:application -k uvicorn.workers.UvicornWorker
 
 [Install]
@@ -234,11 +235,11 @@ server {
     location = /favicon.ico { access_log off; log_not_found off; }
 
     location /static/ {
-        root $PROJECT_DIR;
+        root $PROJECT_DIR/$DJANGO_APP_DIR;
     }
 
     location /media/ {
-        root $PROJECT_DIR;
+        root $PROJECT_DIR/$DJANGO_APP_DIR;
     }
 
     location / {

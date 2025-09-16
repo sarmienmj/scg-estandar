@@ -370,22 +370,59 @@ code {
     <div class="row mb-5">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-print"></i> Impresoras de Tickets</h4>
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-print"></i> Gestión de Impresoras</h4>
+                    {% if puede_gestionar %}
+                    <button class="btn btn-light btn-sm" onclick="mostrarFormularioImpresora()" id="btnAgregarImpresora">
+                        <i class="fas fa-plus"></i> Agregar Impresora
+                    </button>
+                    {% endif %}
                 </div>
                 <div class="card-body">
+                    <!-- Formulario para agregar/editar impresora (inicialmente oculto) -->
+                    {% if puede_gestionar %}
+                    <div id="formularioImpresora" class="alert alert-light border" style="display: none;">
+                        <h6><i class="fas fa-plus-circle"></i> <span id="tituloFormImpresora">Agregar Nueva Impresora</span></h6>
+                        <form id="formImpresora">
+                            <input type="hidden" id="impOriginalId" name="imp_id_original">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="impId" class="form-label">ID de Impresora:</label>
+                                    <input type="text" class="form-control" id="impId" name="imp_id" placeholder="Ej: 1, 2, Caja1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="impIp" class="form-label">Dirección IP:</label>
+                                    <input type="text" class="form-control" id="impIp" name="imp_ip" placeholder="192.168.1.100" required>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success me-2" id="btnGuardarImpresora">
+                                        <i class="fas fa-save"></i> <span id="textoBotonImpresora">Agregar</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="cancelarFormularioImpresora()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Tabla de impresoras -->
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 12%;">ID</th>
-                                    <th style="width: 28%;">Nombre</th>
-                                    <th style="width: 20%;">IP</th>
-                                    <th style="width: 20%;">Prueba</th>
-                                    <th style="width: 20%;">Acción</th>
+                                    <th style="{% if puede_gestionar %}width: 10%;{% else %}width: 12%;{% endif %}">ID</th>
+                                    <th style="{% if puede_gestionar %}width: 20%;{% else %}width: 28%;{% endif %}">Nombre</th>
+                                    <th style="{% if puede_gestionar %}width: 20%;{% else %}width: 25%;{% endif %}">IP</th>
+                                    <th style="{% if puede_gestionar %}width: 15%;{% else %}width: 20%;{% endif %}">Prueba</th>
+                                    <th style="{% if puede_gestionar %}width: 15%;{% else %}width: 15%;{% endif %}">Seleccionar</th>
+                                    {% if puede_gestionar %}
+                                    <th style="width: 20%;">Acciones</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tablaImpresoras">
                         {% for imp_id, impresora in impresoras.items %}
                                 <tr id="row-imp-{{ imp_id }}">
                                     <td><strong>{{ imp_id }}</strong></td>
@@ -406,6 +443,116 @@ code {
                                             <i class="fas fa-check-circle"></i> Seleccionar
                                         </button>
                                     </td>
+                                    {% if puede_gestionar %}
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-warning btn-sm" 
+                                                    onclick="editarImpresora('{{ imp_id }}', '{{ impresora.ip }}')"
+                                                    title="Editar Impresora">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="eliminarImpresora('{{ imp_id }}')"
+                                                    title="Eliminar Impresora">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Impresoras de Etiquetas -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-tags"></i> Gestión de Impresoras de Etiquetas</h4>
+                    {% if puede_gestionar %}
+                    <button class="btn btn-dark btn-sm" onclick="mostrarFormularioImpresoraEtiqueta()" id="btnAgregarImpresoraEtiqueta">
+                        <i class="fas fa-plus"></i> Agregar Impresora de Etiquetas
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <!-- Formulario para agregar/editar impresora de etiquetas (inicialmente oculto) -->
+                    {% if puede_gestionar %}
+                    <div id="formularioImpresoraEtiqueta" class="alert alert-light border" style="display: none;">
+                        <h6><i class="fas fa-plus-circle"></i> <span id="tituloFormImpresoraEtiqueta">Agregar Nueva Impresora de Etiquetas</span></h6>
+                        <form id="formImpresoraEtiqueta">
+                            <input type="hidden" id="impEtiquetaOriginalId" name="imp_id_original">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="impEtiquetaId" class="form-label">ID de Impresora:</label>
+                                    <input type="text" class="form-control" id="impEtiquetaId" name="imp_id" placeholder="Ej: Etiqueta1, TSPL1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="impEtiquetaIp" class="form-label">Dirección IP:</label>
+                                    <input type="text" class="form-control" id="impEtiquetaIp" name="imp_ip" placeholder="192.168.1.150" required>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-warning me-2" id="btnGuardarImpresoraEtiqueta">
+                                        <i class="fas fa-save"></i> <span id="textoBotonImpresoraEtiqueta">Agregar</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="cancelarFormularioImpresoraEtiqueta()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Tabla de impresoras de etiquetas -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="{% if puede_gestionar %}width: 15%;{% else %}width: 20%;{% endif %}">ID</th>
+                                    <th style="{% if puede_gestionar %}width: 25%;{% else %}width: 35%;{% endif %}">Nombre</th>
+                                    <th style="{% if puede_gestionar %}width: 25%;{% else %}width: 30%;{% endif %}">IP</th>
+                                    <th style="{% if puede_gestionar %}width: 15%;{% else %}width: 15%;{% endif %}">Seleccionar</th>
+                                    {% if puede_gestionar %}
+                                    <th style="width: 20%;">Acciones</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody id="tablaImpresorasEtiquetas">
+                        {% for imp_id, impresora in impresoras_etiquetas.items %}
+                                <tr id="row-imp-etiqueta-{{ imp_id }}">
+                                    <td><strong>{{ imp_id }}</strong></td>
+                                    <td>{{ impresora.nombre }}</td>
+                                    <td><code>{{ impresora.ip }}</code></td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm" 
+                                                onclick="seleccionarImpresoraEtiqueta('{{ imp_id }}', '{{ impresora.nombre }}', '{{ impresora.ip }}')"
+                                                id="btn-select-imp-etiqueta-{{ imp_id }}">
+                                            <i class="fas fa-check-circle"></i> Seleccionar
+                                        </button>
+                                    </td>
+                                    {% if puede_gestionar %}
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-info btn-sm" 
+                                                    onclick="editarImpresoraEtiqueta('{{ imp_id }}', '{{ impresora.ip }}')"
+                                                    title="Editar Impresora de Etiquetas">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="eliminarImpresoraEtiqueta('{{ imp_id }}')"
+                                                    title="Eliminar Impresora de Etiquetas">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    {% endif %}
                                 </tr>
                         {% endfor %}
                             </tbody>
@@ -420,32 +567,88 @@ code {
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="fas fa-weight"></i> Conexión a Balanzas</h4>
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-weight"></i> Gestión de Balanzas</h4>
+                    {% if puede_gestionar %}
+                    <button class="btn btn-light btn-sm" onclick="mostrarFormularioBalanza()" id="btnAgregarBalanza">
+                        <i class="fas fa-plus"></i> Agregar Balanza
+                    </button>
+                    {% endif %}
                 </div>
                 <div class="card-body">
+                    <!-- Formulario para agregar/editar balanza (inicialmente oculto) -->
+                    <div id="formularioBalanza" class="alert alert-light border" style="display: none;">
+                        <h6><i class="fas fa-plus-circle"></i> <span id="tituloFormBalanza">Agregar Nueva Balanza</span></h6>
+                        <form id="formBalanza">
+                            <input type="hidden" id="balOriginalId" name="bal_id_original">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="balId" class="form-label">ID de Balanza:</label>
+                                    <input type="text" class="form-control" id="balId" name="bal_id" placeholder="Ej: ICM1, ICM2, Balanza1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="balIp" class="form-label">Dirección IP:</label>
+                                    <input type="text" class="form-control" id="balIp" name="bal_ip" placeholder="192.168.1.103" required>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success me-2" id="btnGuardarBalanza">
+                                        <i class="fas fa-save"></i> <span id="textoBotonBalanza">Agregar</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="cancelarFormularioBalanza()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Tabla de balanzas -->
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 12%;">ID</th>
-                                    <th style="width: 28%;">Nombre</th>
-                                    <th style="width: 30%;">IP</th>
-                                    <th style="width: 30%;">Acción</th>
+                                    <th style="width: 10%;">ID</th>
+                                    <th style="width: 20%;">Nombre</th>
+                                    <th style="width: 20%;">IP</th>
+                                    <th style="width: 15%;">Prueba</th>
+                                    <th style="width: 15%;">Seleccionar</th>
+                                    <th style="width: 20%;">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="tablaBalanzas">
                         {% for bal_id, balanza in balanzas.items %}
                                 <tr id="row-bal-{{ bal_id }}">
                                     <td><strong>{{ bal_id }}</strong></td>
                                     <td>{{ balanza.nombre }}</td>
                                     <td><code>{{ balanza.ip }}</code></td>
                                     <td>
+                                        <button class="btn btn-outline-success btn-sm" 
+                                                onclick="probarBalanza('{{ bal_id }}')"
+                                                id="btn-test-bal-{{ bal_id }}"
+                                                title="Probar Balanza">
+                                            <i class="fas fa-weight"></i> Probar
+                                        </button>
+                                    </td>
+                                    <td>
                                         <button class="btn btn-success btn-sm" 
                                                 onclick="seleccionarBalanza('{{ bal_id }}', '{{ balanza.nombre }}', '{{ balanza.ip }}')"
                                                 id="btn-select-bal-{{ bal_id }}">
                                             <i class="fas fa-check-circle"></i> Seleccionar
                                         </button>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-warning btn-sm" 
+                                                    onclick="editarBalanza('{{ bal_id }}', '{{ balanza.ip }}')"
+                                                    title="Editar Balanza">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="eliminarBalanza('{{ bal_id }}')"
+                                                    title="Eliminar Balanza">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                         {% endfor %}
@@ -1174,6 +1377,310 @@ function mostrarResultado(mensaje, exito) {
 <!-- Scripts locales -->
 <script src="{% static 'jquery-3.6.4.js' %}"></script>
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<script>
+// === FUNCIONES PARA GESTIÓN DE IMPRESORAS ===
+
+let modoEdicionImpresora = false;
+
+function mostrarFormularioImpresora() {
+    document.getElementById('formularioImpresora').style.display = 'block';
+    document.getElementById('btnAgregarImpresora').style.display = 'none';
+    document.getElementById('tituloFormImpresora').textContent = 'Agregar Nueva Impresora';
+    document.getElementById('textoBotonImpresora').textContent = 'Agregar';
+    document.getElementById('impId').value = '';
+    document.getElementById('impIp').value = '';
+    document.getElementById('impOriginalId').value = '';
+    modoEdicionImpresora = false;
+}
+
+function cancelarFormularioImpresora() {
+    document.getElementById('formularioImpresora').style.display = 'none';
+    document.getElementById('btnAgregarImpresora').style.display = 'inline-block';
+    modoEdicionImpresora = false;
+}
+
+function editarImpresora(impId, impIp) {
+    mostrarFormularioImpresora();
+    document.getElementById('tituloFormImpresora').textContent = 'Editar Impresora';
+    document.getElementById('textoBotonImpresora').textContent = 'Actualizar';
+    document.getElementById('impId').value = impId;
+    document.getElementById('impIp').value = impIp;
+    document.getElementById('impOriginalId').value = impId;
+    modoEdicionImpresora = true;
+}
+
+function eliminarImpresora(impId) {
+    if (confirm(`¿Está seguro que desea eliminar la impresora ${impId}?`)) {
+        fetch('/pos/eliminar-impresora/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `imp_id=${encodeURIComponent(impId)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                location.reload(); // Recargar para actualizar la tabla
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar impresora');
+        });
+    }
+}
+
+// Manejar envío del formulario de impresora
+document.getElementById('formImpresora').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const url = modoEdicionImpresora ? '/pos/editar-impresora/' : '/pos/agregar-impresora/';
+    
+    // Para edición, agregar campos adicionales
+    if (modoEdicionImpresora) {
+        formData.append('imp_id_nuevo', formData.get('imp_id'));
+        formData.append('imp_ip_nueva', formData.get('imp_ip'));
+    }
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            location.reload(); // Recargar para actualizar la tabla
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la solicitud');
+    });
+});
+
+// === FUNCIONES PARA GESTIÓN DE BALANZAS ===
+
+let modoEdicionBalanza = false;
+
+function mostrarFormularioBalanza() {
+    document.getElementById('formularioBalanza').style.display = 'block';
+    document.getElementById('btnAgregarBalanza').style.display = 'none';
+    document.getElementById('tituloFormBalanza').textContent = 'Agregar Nueva Balanza';
+    document.getElementById('textoBotonBalanza').textContent = 'Agregar';
+    document.getElementById('balId').value = '';
+    document.getElementById('balIp').value = '';
+    document.getElementById('balOriginalId').value = '';
+    modoEdicionBalanza = false;
+}
+
+function cancelarFormularioBalanza() {
+    document.getElementById('formularioBalanza').style.display = 'none';
+    document.getElementById('btnAgregarBalanza').style.display = 'inline-block';
+    modoEdicionBalanza = false;
+}
+
+function editarBalanza(balId, balIp) {
+    mostrarFormularioBalanza();
+    document.getElementById('tituloFormBalanza').textContent = 'Editar Balanza';
+    document.getElementById('textoBotonBalanza').textContent = 'Actualizar';
+    document.getElementById('balId').value = balId;
+    document.getElementById('balIp').value = balIp;
+    document.getElementById('balOriginalId').value = balId;
+    modoEdicionBalanza = true;
+}
+
+function eliminarBalanza(balId) {
+    if (confirm(`¿Está seguro que desea eliminar la balanza ${balId}?`)) {
+        fetch('/pos/eliminar-balanza/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `bal_id=${encodeURIComponent(balId)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                location.reload(); // Recargar para actualizar la tabla
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar balanza');
+        });
+    }
+}
+
+// Manejar envío del formulario de balanza
+document.getElementById('formBalanza').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const url = modoEdicionBalanza ? '/pos/editar-balanza/' : '/pos/agregar-balanza/';
+    
+    // Para edición, agregar campos adicionales
+    if (modoEdicionBalanza) {
+        formData.append('bal_id_nuevo', formData.get('bal_id'));
+        formData.append('bal_ip_nueva', formData.get('bal_ip'));
+    }
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            location.reload(); // Recargar para actualizar la tabla
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la solicitud');
+    });
+});
+
+// === FUNCIONES PARA GESTIÓN DE IMPRESORAS DE ETIQUETAS ===
+
+let modoEdicionImpresoraEtiqueta = false;
+
+function mostrarFormularioImpresoraEtiqueta() {
+    document.getElementById('formularioImpresoraEtiqueta').style.display = 'block';
+    document.getElementById('btnAgregarImpresoraEtiqueta').style.display = 'none';
+    document.getElementById('tituloFormImpresoraEtiqueta').textContent = 'Agregar Nueva Impresora de Etiquetas';
+    document.getElementById('textoBotonImpresoraEtiqueta').textContent = 'Agregar';
+    document.getElementById('impEtiquetaId').value = '';
+    document.getElementById('impEtiquetaIp').value = '';
+    document.getElementById('impEtiquetaOriginalId').value = '';
+    modoEdicionImpresoraEtiqueta = false;
+}
+
+function cancelarFormularioImpresoraEtiqueta() {
+    document.getElementById('formularioImpresoraEtiqueta').style.display = 'none';
+    document.getElementById('btnAgregarImpresoraEtiqueta').style.display = 'inline-block';
+    modoEdicionImpresoraEtiqueta = false;
+}
+
+function editarImpresoraEtiqueta(impId, impIp) {
+    mostrarFormularioImpresoraEtiqueta();
+    document.getElementById('tituloFormImpresoraEtiqueta').textContent = 'Editar Impresora de Etiquetas';
+    document.getElementById('textoBotonImpresoraEtiqueta').textContent = 'Actualizar';
+    document.getElementById('impEtiquetaId').value = impId;
+    document.getElementById('impEtiquetaIp').value = impIp;
+    document.getElementById('impEtiquetaOriginalId').value = impId;
+    modoEdicionImpresoraEtiqueta = true;
+}
+
+function eliminarImpresoraEtiqueta(impId) {
+    if (confirm(`¿Está seguro que desea eliminar la impresora de etiquetas ${impId}?`)) {
+        fetch('/pos/eliminar-impresora-etiqueta/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `imp_id=${encodeURIComponent(impId)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                location.reload(); // Recargar para actualizar la tabla
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar impresora de etiquetas');
+        });
+    }
+}
+
+function seleccionarImpresoraEtiqueta(impId, nombre, ip) {
+    // Almacenar la selección en localStorage con nombre más consistente
+    localStorage.setItem('impresoraEtiquetas', JSON.stringify({
+        id: impId,
+        nombre: nombre,
+        ip: ip
+    }));
+    alert(`Impresora de etiquetas ${nombre} (${ip}) seleccionada para prepesados`);
+}
+
+// Manejar envío del formulario de impresora de etiquetas
+document.getElementById('formImpresoraEtiqueta').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const url = modoEdicionImpresoraEtiqueta ? '/pos/editar-impresora-etiqueta/' : '/pos/agregar-impresora-etiqueta/';
+    
+    // Para edición, agregar campos adicionales
+    if (modoEdicionImpresoraEtiqueta) {
+        formData.append('imp_id_nuevo', formData.get('imp_id'));
+        formData.append('imp_ip_nueva', formData.get('imp_ip'));
+    }
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            location.reload(); // Recargar para actualizar la tabla
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la solicitud');
+    });
+});
+
+// === FUNCIÓN HELPER PARA CSRF TOKEN ===
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
 
         </div> <!-- config-container -->
     </div> <!-- container-fluid -->
