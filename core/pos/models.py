@@ -36,7 +36,7 @@ class Producto(models.Model):
         ]
 
     nombre = models.CharField(max_length=50)
-    cantidad = models.FloatField( blank=True,null=True,default="")
+    cantidad = models.FloatField( blank=True,null=True,default=0)
     unidad = models.CharField(max_length=20, choices=UNIDAD_OPCIONES)
     moneda = models.CharField(max_length=20, choices=MONEDA_OPCIONES)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
@@ -95,10 +95,114 @@ class Pedido(models.Model):
     usuario = models.CharField(max_length=50,blank=True,null=True)
     pesador = models.CharField(max_length=50,blank=True,null=True)
     numero_pedido_balanza = models.IntegerField(null=True, blank=True)
-        
+    
     def get_productos(self):
+        """Obtener todos los productos del pedido"""
         productos = self.productos.all()
         return productos
+
+
+class PedidoActivo(models.Model):
+    """
+    Modelo para gestionar pedidos activos en modo multi-pesador.
+    Permite que cada pesador mantenga su pedido activo persistente
+    y pueda moverse entre estaciones sin perder el progreso.
+    """
+    
+    # Identificador único del pesador (username)
+    username_pesador = models.CharField(
+        max_length=50, 
+        unique=True,
+        help_text="Username del pesador que tiene este pedido activo"
+    )
+    
+    # Datos del pedido en formato JSON
+    pedido_json = models.JSONField(
+        help_text="Array de productos en el formato del frontend: [{id, nombre, cantidad, precio, ...}]"
+    )
+    
+    # Información adicional del pedido
+    precio_total = models.FloatField(
+        default=0.0,
+        help_text="Precio total del pedido en USD"
+    )
+    
+    cliente_id = models.IntegerField(
+        default=0,
+        help_text="ID del cliente asignado al pedido (0 = cliente genérico)"
+    )
+    
+    cliente_nombre = models.CharField(
+        max_length=100,
+        default="Cliente",
+        help_text="Nombre del cliente para mostrar en UI"
+    )
+    
+    # Metadatos de control
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Fecha y hora de creación del pedido activo"
+    )
+    
+    fecha_ultima_modificacion = models.DateTimeField(
+        auto_now=True,
+        help_text="Fecha y hora de la última modificación"
+    )
+    
+    estacion_actual = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Identificador de la estación donde se está trabajando actualmente"
+    )
+    
+    numero_productos = models.IntegerField(
+        default=0,
+        help_text="Número total de productos en el pedido (para consultas rápidas)"
+    )
+    
+    class Meta:
+        verbose_name = "Pedido Activo"
+        verbose_name_plural = "Pedidos Activos"
+        ordering = ['-fecha_ultima_modificacion']
+    
+    def __str__(self):
+        return f"Pedido activo de {self.username_pesador} - {self.numero_productos} productos - ${self.precio_total:.2f}"
+    
+    def get_productos_count(self):
+        """Cuenta el número de productos únicos en el pedido"""
+        try:
+            return len(self.pedido_json) if self.pedido_json else 0
+        except:
+            return 0
+    
+    def get_productos_display(self):
+        """Retorna una representación legible de los productos"""
+        try:
+            if not self.pedido_json:
+                return "Sin productos"
+            
+            productos = []
+            for p in self.pedido_json[:3]:  # Mostrar máximo 3 productos
+                nombre = p.get('nombre', 'Producto')
+                cantidad = p.get('cantidad', 0)
+                productos.append(f"{nombre} ({cantidad})")
+            
+            resultado = ", ".join(productos)
+            if len(self.pedido_json) > 3:
+                resultado += f" y {len(self.pedido_json) - 3} más..."
+            
+            return resultado
+        except:
+            return "Error al leer productos"
+    
+    def save(self, *args, **kwargs):
+        """Override save para actualizar número de productos automáticamente"""
+        if self.pedido_json:
+            self.numero_productos = self.get_productos_count()
+        else:
+            self.numero_productos = 0
+        super().save(*args, **kwargs)
 
 class ValorDolar(models.Model):
     valor = models.FloatField()

@@ -34,6 +34,34 @@
           style="background-color: #467012; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">
           <span class="navbar-text" style="color:white">Usuario: {{user.get_username}}</span>
         </li>
+        
+        <!-- Selector Rápido de Pesadores (Solo visible en modo multi-pesador) -->
+        <li id="selector-pesador-rapido" class="nav-item dropdown ms-3" style="display: none;">
+          <button class="btn btn-outline-light dropdown-toggle" 
+                  type="button" 
+                  id="dropdownPesadorRapido" 
+                  data-bs-toggle="dropdown" 
+                  aria-expanded="false"
+                  style="background-color: #f8f9fa; color: #2d5016; border-color: #2d5016; font-weight: 500;">
+            <i class="fas fa-user-friends"></i> 
+            <span id="pesador-activo-nombre">Seleccionar Pesador</span>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownPesadorRapido" id="listaPesadoresRapida" style="min-width: 280px; max-height: 400px; overflow-y: auto;">
+            <li><h6 class="dropdown-header">
+              <i class="fas fa-users-cog text-primary"></i> Cambiar Pesador Activo
+            </h6></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="px-3 py-2">
+              <div class="text-center">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <div class="small text-muted mt-1">Cargando pesadores...</div>
+              </div>
+            </li>
+          </ul>
+        </li>
+        
         {% if not user.groups.all|join:"," == 'PESADOR' %}
         <li id="boton-estado-caja" class="nav-item ms-5"
           style="background-color: #dc3545; padding: 10px; cursor: pointer; color: white; border-radius: 4px;">

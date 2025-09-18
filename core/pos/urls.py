@@ -112,6 +112,14 @@ urlpatterns = [
     path('agregar-impresora-etiqueta/', AgregarImpresoraEtiqueta.as_view(), name='agregar-impresora-etiqueta'),
     path('eliminar-impresora-etiqueta/', EliminarImpresoraEtiqueta.as_view(), name='eliminar-impresora-etiqueta'),
     path('editar-impresora-etiqueta/', EditarImpresoraEtiqueta.as_view(), name='editar-impresora-etiqueta'),
+    
+    # Gestión de pesadores para modo multi-pesador
+    path('obtener-pesadores/', ObtenerPesadores.as_view(), name='obtener-pesadores'),
+    
+    # APIs para modo multi-pesador
+    path('guardar-pedido-activo/', GuardarPedidoActivo.as_view(), name='guardar-pedido-activo'),
+    path('cargar-pedido-activo/', CargarPedidoActivo.as_view(), name='cargar-pedido-activo'),
+    path('eliminar-pedido-activo/', EliminarPedidoActivo.as_view(), name='eliminar-pedido-activo'),
 
     path('volver-pos/', VolverPOS.as_view(), name='volver-pos'),
 

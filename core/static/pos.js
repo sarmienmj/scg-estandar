@@ -231,6 +231,10 @@ function numerosTeclado(id) {
             );
           }
         });
+        
+        // 🔄 AUTO-GUARDADO: Guardar pedido activo después de cambiar cantidad con teclado
+        autoGuardarPedidoActivoDebounced();
+        
         str_numeros = "";
       }
     } else {
@@ -274,7 +278,7 @@ function numerosTeclado(id) {
 function scrollProductoEnPedido(id) {
   position = 0;
   for (i in pedido) {
-    if (pedido[i].uniqueId == id) {
+    if (pedido[i].id == id) {
       position = i;
     }
   }
@@ -305,6 +309,10 @@ function cambiarPrecioProductoPedido(id) {
       cambiarPrecioTotal();
       $("#id-" + id).remove();
       cambiarPrecioTotal();
+      
+      // 🔄 AUTO-GUARDADO: Guardar pedido activo después de eliminar producto
+      autoGuardarPedidoActivoDebounced();
+      
       return 0;
     }
   });
@@ -404,6 +412,9 @@ function PesoBalanza(id) {
             }
           });
 
+          // 🔄 AUTO-GUARDADO: Guardar pedido activo después de cambiar peso (Bluetooth)
+          autoGuardarPedidoActivoDebounced();
+
           cambiarPrecioTotal();
           peso = 0;
         }
@@ -453,6 +464,9 @@ function PesoBalanza(id) {
             }
           });
 
+          // 🔄 AUTO-GUARDADO: Guardar pedido activo después de cambiar peso (WiFi)
+          autoGuardarPedidoActivoDebounced();
+
           cambiarPrecioTotal();
           peso = 0;
         }
@@ -487,10 +501,10 @@ function aumentarCantidadUno(id) {
         pedido_cargado_modificado = true;
 
         if (moneda == "USD") {
-          precioUsd = precio * cantidad;
+          precioUsd = producto.precio * cantidad;
           precioBs = precioUsd * bcv;
         } else if (moneda == "BS") {
-          precioBs = precio * cantidad;
+          precioBs = producto.precio * cantidad;
           precioUsd = precioBs / bcv;
         }
 
@@ -502,10 +516,12 @@ function aumentarCantidadUno(id) {
         $("#id-" + producto.uniqueId + "> div > div > h6").text(
           `${NumeroD(precioUsd)}$ = ${NumeroD(precioBs)}Bs.F`
         );
+        
+        // 🔄 AUTO-GUARDADO: Guardar pedido activo después de aumentar cantidad
+        autoGuardarPedidoActivoDebounced();
       }
     }
   });
-  cambiarPrecioTotal();
 }
 function mueveReloj() {
   momentoActual = new Date();
@@ -625,16 +641,57 @@ function buscarProductoBarcode(scancode) {
       }
 
       if (revisarExisteProductoPedido(id) == "si") {
-        scrollProductoEnPedido(id);
-        cambiarPrecioProductoPedido(id);
+        // 🔧 BARCODE FIX: Incrementar cantidad en 1 cuando producto ya existe
+        const productoExistente = pedido.find(p => p.id == id);
+        if (productoExistente) {
+          console.log(`📊 Incrementando cantidad del producto: ${productoExistente.nombre}`);
+          
+          // Incrementar cantidad en 1
+          productoExistente.cantidad = parseFloat(productoExistente.cantidad) + 1;
+          
+          // Actualizar la UI
+          scrollProductoEnPedido(id);
+          
+          // Recalcular precios
+          const moneda = productoExistente.moneda;
+          const precioUnitario = productoExistente.precio;
+          const nuevaCantidad = productoExistente.cantidad;
+          
+          let precioTotalUsd, precioTotalBs;
+          if (moneda == "USD") {
+            precioTotalUsd = precioUnitario * nuevaCantidad;
+            precioTotalBs = precioTotalUsd * bcv;
+          } else if (moneda == "BS") {
+            precioTotalBs = precioUnitario * nuevaCantidad;
+            precioTotalUsd = precioTotalBs / bcv;
+          }
+          
+          // Actualizar el HTML del producto
+          $(`#id-${productoExistente.uniqueId} > div > div > p`).text(
+            `${nuevaCantidad} ${productoExistente.unidad} en ${NumeroD(precioUnitario)} ${moneda}/${productoExistente.unidad}`
+          );
+          $(`#id-${productoExistente.uniqueId} > div > div > h6`).text(
+            `${NumeroD(precioTotalUsd)}$ = ${NumeroD(precioTotalBs)}Bs.F`
+          );
+          
+          // Actualizar precio total del pedido
+          cambiarPrecioTotal();
+          
+          // Auto-guardado
+          autoGuardarPedidoActivoDebounced();
+        }
       } else {
-        pedidodiv = `<div id="id-${id}" class="container apuntar mt-1 border pedido-div-producto"><div class="row"><div class="col-6"><h5 class="">${capitalize(
+        // 🔧 BARCODE FIX: Generar uniqueId para consistencia con otros productos
+        const uniqueId = generateUUID();
+        
+        pedidodiv = `<div id="id-${uniqueId}" class="container apuntar mt-1 border pedido-div-producto"><div class="row"><div class="col-6"><h5 class="">${capitalize(
           nombre
         )}</h5><p class="fs-6">1 ${unidad} en ${precio_display}  ${moneda}/${unidad}</p></div><div class="col-6"><h6>${NumeroD(
           precioUsd
         )}$ = ${NumeroD(precioBs)}Bs.F</h6></div></div></div>`;
         $("#lista-de-pedidos").append(pedidodiv);
         pedido.push({
+          uniqueId: uniqueId,  // ← AGREGADO: uniqueId para consistencia
           id: id,
           nombre: nombre,
           precio: precio,
@@ -643,8 +700,11 @@ function buscarProductoBarcode(scancode) {
           barcode: barcode,
           moneda: moneda,
         });
-        addEvent(id);
+        addEvent(uniqueId);  // ← CAMBIADO: usar uniqueId en lugar de id
         cambiarPrecioTotal();
+        
+        // 🔄 AUTO-GUARDADO: Guardar pedido activo después de agregar producto por código de barras
+        autoGuardarPedidoActivoDebounced();
       }
     }
   });
@@ -657,6 +717,9 @@ function cargarCliente() {
 
     $("#boton-cliente > span").text(cliente_nombre);
     cliente_id = parseInt(cliente_id);
+    
+    // 🔄 AUTO-GUARDADO: Guardar pedido activo después de cambiar cliente
+    autoGuardarPedidoActivoDebounced();
     
     // Si ya existe un pedido que no está pagado, actualizar su cliente
     if (pedido_id !== "nuevo") {
@@ -862,6 +925,9 @@ function procesarPrePesado(scancode) {
   addEvent(uniqueId);
   cambiarPrecioTotal();
   pedido_cargado_modificado = true;
+  
+  // 🔄 AUTO-GUARDADO: Guardar pedido activo después de agregar producto pre-pesado
+  autoGuardarPedidoActivoDebounced();
 }
 
 // Mostrar overlay de pantalla completa siempre al entrar al POS
@@ -1189,8 +1255,9 @@ $(document).ready(function () {
         pedido.forEach((p) => {
           if (p.id == productoid) {
             scrollProductoEnPedido(productoid);
-          aumentarCantidadUno(productoid);
+            aumentarCantidadUno(p.uniqueId);
           cambiarPrecioProductoPedido(p.uniqueId);
+            cambiarPrecioTotal();
           }
         });
           
@@ -1239,6 +1306,9 @@ $(document).ready(function () {
         lista_pedidos.scrollTop(height_scroll);
         addEvent(uniqueId);
         cambiarPrecioTotal();
+        
+        // 🔄 AUTO-GUARDADO: Guardar pedido activo después de agregar producto
+        autoGuardarPedidoActivoDebounced();
       }
     });
 
@@ -1312,7 +1382,7 @@ $(document).ready(function () {
     if ($("#lista-pedidos-div").css("display") == "none") {
       $("#tabla-pedidos").html("");
       $.ajax({
-        url: "pedidosList/",
+        url: "pedidosList/todos/",
         type: "POST",
         dataType: "json",
         success: function (response) {
@@ -1458,7 +1528,12 @@ $(document).ready(function () {
   });
 
   $(".nuevo-pedido").on("click", function () {
-    location.assign("/pos");
+    // 🔄 MULTI-PESADOR: Eliminar pedido activo antes de crear nuevo pedido
+    if (modoMultiPesadorActivo && pesadorActualSeleccionado) {
+      eliminarPedidoActivoAlNuevoPedido();
+    } else {
+      location.assign("/pos");
+    }
   });
 
   $("#guardar-notas").on("click", function () {
@@ -1470,7 +1545,7 @@ $(document).ready(function () {
     if (id == "") {
       $("#tabla-pedidos").html("");
       $.ajax({
-        url: "pedidosList/",
+        url: "pedidosList/todos/",
         type: "POST",
         dataType: "json",
         success: function (response) {
@@ -2878,11 +2953,18 @@ function getModoBalanza() {
       // Mostrar feedback inmediato pero no bloqueante
       mostrarProcesamientoRapido();
 
+      // 🎯 MULTI-PESADOR: Usar pesador seleccionado si está activo, sino usar usuario logueado
+      const usuarioParaGuardar = (modoMultiPesadorActivo && pesadorActualSeleccionado) 
+          ? pesadorActualSeleccionado.username 
+          : usuario;
+          
+      console.log(`💾 Guardando pedido con usuario: ${usuarioParaGuardar} (Multi-pesador: ${modoMultiPesadorActivo ? 'SÍ' : 'NO'})`);
+
       $.ajax({
         url: "guardar-pedido-rapido/", // Nueva URL optimizada
         data: {
           impresora: localStorage.getItem("impresora"),
-          usuario: usuario,
+          usuario: usuarioParaGuardar,
           pedidoJSON: pedido_json,
           pedido: pedido,
           cliente: cliente_id,
@@ -2890,6 +2972,7 @@ function getModoBalanza() {
           notas: notas,
           pedido_id: pedido_id,
           modoImpresion: localStorage.getItem("modoImpresion") || "ticket", // AGREGAR MODO DE IMPRESIÓN
+          modo_multi_pesador: modoMultiPesadorActivo ? "true" : "false", // 🔄 MULTI-PESADOR: Estado del modo
         },
         type: "POST",
         timeout: 10000, // 10 segundos timeout
@@ -3439,8 +3522,688 @@ function getModoBalanza() {
     }, 3000);
   }
   
+// === SELECTOR RÁPIDO DE PESADORES (MODO MULTI-PESADOR) ===
 
+// Variables globales para selector de pesadores
+let modoMultiPesadorActivo = false;
+let pesadoresAutorizados = [];
+let pesadorActualSeleccionado = null;
+let cargandoPesadoresRapido = false;
 
+// Inicializar selector de pesadores al cargar POS
+$(document).ready(function() {
+    verificarModoMultiPesador();
+});
 
+// Verificar si el modo multi-pesador está activo
+function verificarModoMultiPesador() {
+    try {
+        const config = localStorage.getItem('modoMultiPesador');
+        const pesadores = localStorage.getItem('pesadoresSeleccionados');
+        
+        if (config && pesadores) {
+            const configData = JSON.parse(config);
+            const pesadoresData = JSON.parse(pesadores);
+            
+            if (configData.activo && pesadoresData.length > 0) {
+                modoMultiPesadorActivo = true;
+                pesadoresAutorizados = pesadoresData;
+                mostrarSelectorPesadores();
+                cargarPesadoresEnDropdown();
+                
+                // 🔄 RESTAURAR pesador desde localStorage (mantener selección después de recargar)
+                let pesadorAEstablecer = null;
+                
+                try {
+                    const pesadorGuardado = localStorage.getItem('pesadorActualSeleccionado');
+                    if (pesadorGuardado) {
+                        const pesadorData = JSON.parse(pesadorGuardado);
+                        // Verificar que el pesador guardado sigue siendo válido/autorizado
+                        const pesadorValido = pesadoresAutorizados.find(p => p.username === pesadorData.username);
+                        if (pesadorValido) {
+                            pesadorAEstablecer = pesadorValido;
+                            console.log(`🔄 Restaurando pesador desde localStorage: ${pesadorData.username}`);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Error restaurando pesador desde localStorage:', error);
+                }
+                
+                // Fallback: usar usuario logueado si no hay pesador guardado válido
+                if (!pesadorAEstablecer) {
+                    const usuarioActual = usuario; // Variable global del POS
+                    const pesadorEncontrado = pesadoresAutorizados.find(p => p.username === usuarioActual);
+                    if (pesadorEncontrado) {
+                        pesadorAEstablecer = pesadorEncontrado;
+                        console.log(`👤 Usando usuario logueado como pesador: ${usuarioActual}`);
+                    }
+                }
+                
+                // Establecer pesador final
+                if (pesadorAEstablecer) {
+                    pesadorActualSeleccionado = pesadorAEstablecer;
+                    actualizarNombrePesadorActivo();
+                    
+                    // Cargar pedido activo del pesador al iniciar (solo si no hay URL con pedido específico)
+                    cargarPedidoInicialSiCorresponde();
+                    
+                    // Auto-guardado por acciones ya está implementado (no necesita intervalo)
+                }
+                
+                console.log(`✅ Modo multi-pesador activo con ${pesadoresAutorizados.length} pesadores autorizados`);
+            }
+        }
+    } catch (error) {
+        console.error('Error verificando modo multi-pesador:', error);
+    }
+}
+
+// Mostrar el selector de pesadores en el navbar
+function mostrarSelectorPesadores() {
+    const selector = document.getElementById('selector-pesador-rapido');
+    if (selector) {
+        selector.style.display = 'block';
+    }
+}
+
+// Cargar pesadores en el dropdown
+function cargarPesadoresEnDropdown() {
+    const dropdown = document.getElementById('listaPesadoresRapida');
+    if (!dropdown) return;
+    
+    // Limpiar contenido excepto header
+    dropdown.innerHTML = `
+        <li><h6 class="dropdown-header">
+          <i class="fas fa-users-cog text-primary"></i> Cambiar Pesador Activo
+        </h6></li>
+        <li><hr class="dropdown-divider"></li>`;
+    
+    if (pesadoresAutorizados.length === 0) {
+        dropdown.innerHTML += `
+            <li class="px-3 py-2">
+                <div class="text-center text-muted">
+                    <i class="fas fa-exclamation-triangle"></i><br>
+                    No hay pesadores configurados
+                </div>
+            </li>`;
+        return;
+    }
+    
+    // Agregar cada pesador autorizado
+    pesadoresAutorizados.forEach(pesador => {
+        const isActivo = pesadorActualSeleccionado && pesadorActualSeleccionado.username === pesador.username;
+        
+        // Formatear último login
+        let ultimoLogin = 'Nunca';
+        if (pesador.ultimo_login) {
+            const fecha = new Date(pesador.ultimo_login);
+            const ahora = new Date();
+            const dias = Math.floor((ahora - fecha) / (1000 * 60 * 60 * 24));
+            
+            if (dias === 0) ultimoLogin = 'Hoy';
+            else if (dias === 1) ultimoLogin = 'Ayer';
+            else if (dias < 7) ultimoLogin = `Hace ${dias}d`;
+            else ultimoLogin = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+        }
+        
+        const pesadorItem = document.createElement('li');
+        pesadorItem.innerHTML = `
+            <a class="dropdown-item pesador-item ${isActivo ? 'active' : ''}" 
+               href="#" 
+               data-pesador-username="${pesador.username}"
+               data-pesador-id="${pesador.id}"
+               style="padding: 12px 16px; ${isActivo ? 'background-color: #e3f2fd;' : ''}">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                             style="width: 35px; height: 35px; font-size: 14px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold text-dark">${pesador.nombre_completo}</div>
+                        <div class="small text-muted">
+                            @${pesador.username} • ID: ${pesador.id}
+                            ${isActivo ? '<span class="badge bg-success ms-2">ACTIVO</span>' : ''}
+                        </div>
+                        <div class="small text-muted">
+                            <i class="fas fa-clock me-1"></i>Último acceso: ${ultimoLogin}
+                        </div>
+                    </div>
+                    ${isActivo ? '<i class="fas fa-check text-success"></i>' : ''}
+                </div>
+            </a>`;
+        
+        dropdown.appendChild(pesadorItem);
+    });
+    
+    // Agregar event listeners
+    dropdown.querySelectorAll('.pesador-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const username = this.getAttribute('data-pesador-username');
+            const pesadorId = this.getAttribute('data-pesador-id');
+            cambiarPesadorActivo(username, pesadorId);
+        });
+    });
+    
+    // Agregar botón de configuración al final
+    const configItem = document.createElement('li');
+    configItem.innerHTML = `
+        <hr class="dropdown-divider">
+        <a class="dropdown-item text-center text-muted" href="/pos/configuracion/" target="_blank">
+            <i class="fas fa-cog me-2"></i>Configurar Multi-Pesador
+        </a>`;
+    dropdown.appendChild(configItem);
+}
+
+// Cambiar pesador activo
+function cambiarPesadorActivo(username, pesadorId) {
+    const pesadorSeleccionado = pesadoresAutorizados.find(p => p.username === username);
+    if (!pesadorSeleccionado) {
+        console.error('Pesador no encontrado:', username);
+        return;
+    }
+    
+    // Verificar si ya es el pesador activo
+    if (pesadorActualSeleccionado && pesadorActualSeleccionado.username === username) {
+        mostrarNotificacionPesador('info', 'Este pesador ya está activo');
+        return;
+    }
+    
+    // Ejecutar cambio de pesador directamente (sin confirmación)
+    ejecutarCambioPesador(pesadorSeleccionado);
+}
+
+// Ejecutar el cambio de pesador completo (asíncrono)
+async function ejecutarCambioPesador(pesadorSeleccionado) {
+    try {
+        mostrarNotificacionPesador('info', 'Cambiando pesador...', false);
+        
+        // PASO 1: Guardar pedido actual si hay productos
+        if (pedido.length > 0 && pesadorActualSeleccionado) {
+            console.log('💾 Guardando pedido actual antes de cambiar pesador...');
+            await guardarPedidoActivoBackend(pesadorActualSeleccionado.username);
+        }
+        
+        // PASO 2: Cambiar pesador activo
+        const pesadorAnterior = pesadorActualSeleccionado;
+        pesadorActualSeleccionado = pesadorSeleccionado;
+        
+        // 💾 PERSISTENCIA: Guardar pesador seleccionado en localStorage
+        localStorage.setItem('pesadorActualSeleccionado', JSON.stringify(pesadorSeleccionado));
+        console.log(`💾 Pesador guardado en localStorage: ${pesadorSeleccionado.username}`);
+        
+        actualizarNombrePesadorActivo();
+        cargarPesadoresEnDropdown();
+        
+        // PASO 3: Limpiar pedido actual
+        limpiarPedidoActual();
+        
+        // PASO 4: Cargar pedido del nuevo pesador desde backend
+        console.log('📥 Cargando pedido del nuevo pesador...');
+        await cargarPedidoActivoBackend(pesadorSeleccionado.username);
+        
+        // PASO 5: Mostrar notificación de éxito
+        mostrarNotificacionPesador('success', 
+            `✅ Cambiado a pesador: ${pesadorSeleccionado.nombre_completo}`);
+        
+        console.log(`✅ Pesador activo cambiado exitosamente: ${pesadorAnterior?.username || 'ninguno'} → ${pesadorSeleccionado.username}`);
+        
+    } catch (error) {
+        console.error('❌ Error al cambiar pesador:', error);
+        
+        // Revertir cambio en caso de error
+        if (pesadorActualSeleccionado) {
+            pesadorActualSeleccionado = pesadorAnterior;
+            actualizarNombrePesadorActivo();
+            cargarPesadoresEnDropdown();
+        }
+        
+        mostrarNotificacionPesador('error', 
+            `Error al cambiar pesador: ${error.message || 'Error desconocido'}`);
+    }
+}
+
+// Actualizar nombre del pesador activo en el botón
+function actualizarNombrePesadorActivo() {
+    const nombreSpan = document.getElementById('pesador-activo-nombre');
+    if (nombreSpan && pesadorActualSeleccionado) {
+        nombreSpan.textContent = pesadorActualSeleccionado.nombre_completo;
+    }
+}
+
+// Limpiar pedido actual
+function limpiarPedidoActual() {
+    // Limpiar array de pedido
+    pedido = [];
+    
+    // Limpiar UI del pedido
+    const listaPedidos = document.getElementById('lista-de-pedidos');
+    if (listaPedidos) {
+        listaPedidos.innerHTML = '';
+    }
+    
+    // Actualizar precio total
+    cambiarPrecioTotal();
+    
+    // Marcar como modificado
+    pedido_cargado_modificado = true;
+    
+    console.log('🧹 Pedido actual limpiado');
+}
+
+// Función para mostrar notificaciones específicas del selector de pesadores
+function mostrarNotificacionPesador(tipo, mensaje) {
+    const alertClass = {
+        'success': 'bg-success',
+        'info': 'bg-info', 
+        'warning': 'bg-warning',
+        'error': 'bg-danger'
+    }[tipo] || 'bg-info';
+    
+    const iconClass = {
+        'success': 'fa-check-circle',
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle', 
+        'error': 'fa-times-circle'
+    }[tipo] || 'fa-info-circle';
+    
+    // Remover notificaciones anteriores
+    document.querySelectorAll('.notificacion-pesador').forEach(el => el.remove());
+    
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion-pesador position-fixed ${alertClass} text-white`;
+    notificacion.style.cssText = `
+        top: 20px; right: 20px; z-index: 9999; 
+        padding: 15px 20px; border-radius: 8px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        min-width: 300px; max-width: 400px;`;
+    notificacion.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas ${iconClass} me-3"></i>
+            <div>
+                <strong>Selector de Pesadores</strong><br>
+                <small>${mensaje}</small>
+            </div>
+        </div>`;
+    
+    document.body.appendChild(notificacion);
+    
+    // Auto-remover después de 4 segundos
+    setTimeout(() => {
+        if (notificacion.parentElement) {
+            notificacion.style.opacity = '0';
+            notificacion.style.transform = 'translateX(100%)';
+            notificacion.style.transition = 'all 0.3s ease';
+            setTimeout(() => notificacion.remove(), 300);
+        }
+    }, 4000);
+}
+
+// === FUNCIONES DE BACKEND PARA PERSISTENCIA ===
+
+// Guardar pedido activo en el backend
+async function guardarPedidoActivoBackend(username_pesador) {
+    try {
+        // Calcular precio total actual
+        const precioTotal = calcularPrecioTotalPedido();
+        
+        // Obtener datos del cliente actual
+        const clienteId = $('#clienteSeleccionado').data('cliente-id') || 0;
+        const clienteNombre = $('#clienteSeleccionado').text() || 'Cliente';
+        
+        // Preparar datos para enviar
+        const datos = {
+            username_pesador: username_pesador,
+            pedido_json: pedido, // Array de productos actual
+            precio_total: precioTotal,
+            cliente_id: clienteId,
+            cliente_nombre: clienteNombre,
+            estacion_actual: window.location.href
+        };
+        
+        console.log('💾 Enviando datos al backend:', {
+            pesador: username_pesador,
+            productos: pedido.length,
+            total: precioTotal
+        });
+        
+        // Enviar al backend
+        const response = await fetch('/pos/guardar-pedido-activo/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(datos)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Error desconocido del servidor');
+        }
+        
+        console.log(`✅ Pedido activo guardado: ${result.action} - ${result.message}`);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Error guardando pedido activo:', error);
+        throw error;
+    }
+}
+
+// Cargar pedido activo desde el backend
+async function cargarPedidoActivoBackend(username_pesador) {
+    try {
+        console.log(`📥 Cargando pedido activo para: ${username_pesador}`);
+        
+        // Consultar al backend
+        const response = await fetch(`/pos/cargar-pedido-activo/?username_pesador=${encodeURIComponent(username_pesador)}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Error desconocido del servidor');
+        }
+        
+        // Si no hay pedido activo, no hacer nada
+        if (!result.tiene_pedido_activo) {
+            console.log('ℹ️ No hay pedido activo para este pesador');
+            return null;
+        }
+        
+        // Restaurar pedido activo
+        const pedidoActivo = result.pedido_activo;
+        console.log(`✅ Pedido activo encontrado: ${pedidoActivo.numero_productos} productos, $${pedidoActivo.precio_total}`);
+        
+        // Limpiar pedido actual y cargar el nuevo
+        limpiarPedidoActual();
+        pedido = pedidoActivo.pedido_json || [];
+        
+        // Asegurar que todos los productos tengan uniqueId
+        pedido.forEach(producto => {
+            if (!producto.uniqueId) {
+                producto.uniqueId = generateUUID();
+            }
+        });
+        
+        // Restaurar cliente si está definido
+        if (pedidoActivo.cliente_id && pedidoActivo.cliente_id !== 0) {
+            $('#clienteSeleccionado')
+                .text(pedidoActivo.cliente_nombre)
+                .data('cliente-id', pedidoActivo.cliente_id);
+        }
+        
+        // Regenerar UI del pedido
+        regenerarUIPedido();
+        
+        console.log(`📦 Pedido restaurado exitosamente: ${pedido.length} productos cargados`);
+        return pedidoActivo;
+        
+    } catch (error) {
+        console.error('❌ Error cargando pedido activo:', error);
+        throw error;
+    }
+}
+
+// Eliminar pedido activo del backend (cuando se finaliza un pedido)
+async function eliminarPedidoActivoBackend(username_pesador) {
+    try {
+        console.log(`🗑️ Eliminando pedido activo para: ${username_pesador}`);
+        
+        const response = await fetch('/pos/eliminar-pedido-activo/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                username_pesador: username_pesador
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Error desconocido del servidor');
+        }
+        
+        console.log(`✅ ${result.message}`);
+        return result;
+        
+    } catch (error) {
+        console.error('❌ Error eliminando pedido activo:', error);
+        throw error;
+    }
+}
+
+// Calcular precio total del pedido actual
+function calcularPrecioTotalPedido() {
+    let total = 0;
+    
+    for (const producto of pedido) {
+        const cantidad = parseFloat(producto.cantidad) || 0;
+        const precio = parseFloat(producto.precio) || 0;
+        total += cantidad * precio;
+    }
+    
+    return parseFloat(total.toFixed(2));
+}
+
+// Regenerar UI del pedido desde el array
+function regenerarUIPedido() {
+    // Limpiar contenedor de productos (usar el contenedor correcto del POS)
+    const contenedor = document.getElementById('lista-de-pedidos');
+    if (!contenedor) {
+        console.error('❌ Contenedor #lista-de-pedidos no encontrado');
+        return;
+    }
+    
+    // Limpiar contenido existente
+    contenedor.innerHTML = '';
+    
+    // Regenerar cada producto usando el formato original del POS
+    for (const producto of pedido) {
+        agregarProductoAUI(producto);
+    }
+    
+    // Actualizar precio total
+    cambiarPrecioTotal();
+    
+    console.log(`🔄 UI regenerada: ${pedido.length} productos mostrados en #lista-de-pedidos`);
+}
+
+// Función auxiliar para agregar un producto a la UI (sin modificar el array)
+function agregarProductoAUI(producto) {
+    const contenedor = document.getElementById('lista-de-pedidos');
+    if (!contenedor) {
+        console.error('❌ Contenedor #lista-de-pedidos no encontrado');
+        return;
+    }
+    
+    const cantidad = parseFloat(producto.cantidad) || 0;
+    const precio = parseFloat(producto.precio) || 0;
+    const moneda = producto.moneda || 'USD';
+    const unidad = producto.unidad || 'U';
+    const uniqueId = producto.uniqueId; // Usar el uniqueId existente del producto
+    
+    // Calcular precios en USD y BS
+    let precioUsd, precioBs, precio_display;
+    
+    // Usar tasa de cambio global o valor por defecto
+    const tasaCambio = typeof bcv !== 'undefined' ? bcv : (typeof dolar !== 'undefined' ? dolar : 1);
+    
+    if (moneda === "USD") {
+        precioUsd = precio;
+        precioBs = precioUsd * tasaCambio;
+        precio_display = typeof NumeroD !== 'undefined' ? NumeroD(precioUsd) : precioUsd.toFixed(2);
+    } else if (moneda === "BS") {
+        precioBs = precio;
+        precioUsd = precioBs / tasaCambio;
+        precio_display = typeof NumeroD !== 'undefined' ? NumeroD(precioBs) : precioBs.toFixed(2);
+    } else {
+        // Fallback si moneda no está definida
+        precioUsd = precio;
+        precioBs = precio * tasaCambio;
+        precio_display = typeof NumeroD !== 'undefined' ? NumeroD(precioUsd) : precioUsd.toFixed(2);
+    }
+    
+    const precioTotalUsd = precioUsd * cantidad;
+    const precioTotalBs = precioBs * cantidad;
+    
+    // Funciones auxiliares con fallbacks
+    const capitalizeStr = typeof capitalize !== 'undefined' ? capitalize : 
+        (str => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase());
+    const formatNum = typeof NumeroD !== 'undefined' ? NumeroD : 
+        (num => parseFloat(num).toFixed(2));
+    
+    // Usar el formato HTML original del POS
+    const pedidodiv = `<div id="id-${uniqueId}" class="container apuntar mt-1 border pedido-div-producto">
+        <div class="row">
+            <div class="col-6">
+                <h5 class="">${capitalizeStr(producto.nombre)}</h5>
+                <p class="fs-6">${cantidad} ${unidad} en ${precio_display} ${moneda}/${unidad}</p>
+            </div>
+            <div class="col-6">
+                <h6>${formatNum(precioTotalUsd)}$ = ${formatNum(precioTotalBs)}Bs.F</h6>
+            </div>
+        </div>
+    </div>`;
+    
+    // Agregar al contenedor
+    $("#lista-de-pedidos").append(pedidodiv);
+    
+    // Agregar event listeners (importante para que sea clickeable)
+    addEvent(uniqueId);
+    
+    console.log(`✅ Producto agregado a UI: ${producto.nombre} (${uniqueId})`);
+}
+
+// === AUTO-GUARDADO EN TIEMPO REAL ===
+
+// Función para auto-guardar pedido activo cuando hay cambios
+async function autoGuardarPedidoActivo() {
+    // Solo guardar si modo multi-pesador está activo y hay pesador seleccionado
+    if (!modoMultiPesadorActivo || !pesadorActualSeleccionado) {
+        return;
+    }
+    
+    try {
+        console.log('🔄 Auto-guardando pedido activo...');
+        await guardarPedidoActivoBackend(pesadorActualSeleccionado.username);
+        console.log('✅ Auto-guardado completado');
+    } catch (error) {
+        console.error('❌ Error en auto-guardado:', error);
+        // No mostrar error al usuario para no interrumpir el flujo
+    }
+}
+
+// Función debounced para evitar demasiadas llamadas al servidor
+let autoGuardadoTimeout = null;
+function autoGuardarPedidoActivoDebounced(delay = 1000) {
+    // Limpiar timeout anterior
+    if (autoGuardadoTimeout) {
+        clearTimeout(autoGuardadoTimeout);
+    }
+    
+    // Programar nuevo auto-guardado
+    autoGuardadoTimeout = setTimeout(() => {
+        autoGuardarPedidoActivo();
+    }, delay);
+}
+
+// === FUNCIONES PARA RESOLVER CONFLICTOS ===
+
+// Cargar pedido inicial considerando conflictos URL vs pesador activo
+async function cargarPedidoInicialSiCorresponde() {
+    try {
+        // Verificar si estamos en una URL con pedido específico
+        const urlActual = window.location.pathname;
+        const matchPedido = urlActual.match(/\/pos\/(\d+)\//);
+        
+        if (matchPedido) {
+            const pedidoId = matchPedido[1];
+            console.log(`🔍 URL con pedido específico detectada: ${pedidoId}`);
+            
+            // Si hay productos en el pedido actual (cargados desde la URL), 
+            // priorizar el pedido de la URL (comportamiento automático)
+            if (pedido.length > 0) {
+                console.log('ℹ️ Pedido desde URL detectado - manteniendo pedido actual, no cargando pedido activo');
+                return;
+            }
+        }
+        
+        // Intentar cargar pedido activo del pesador
+        if (pesadorActualSeleccionado) {
+            console.log('📥 Intentando cargar pedido activo al iniciar...');
+            await cargarPedidoActivoBackend(pesadorActualSeleccionado.username);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error cargando pedido inicial:', error);
+        // No mostrar error al usuario, solo log para debugging
+    }
+}
+
+// === NOTA: Auto-guardado solo por acciones (no automático) ===
+// El pedido se guarda automáticamente cuando:
+// - Se agrega un producto
+// - Se modifica cantidad/peso  
+// - Se elimina un producto
+// - Se cambia cliente
+// No hay auto-guardado por tiempo (eliminado por solicitud del usuario)
+
+// === FUNCIÓN DE LIMPIEZA PARA PESADOR GUARDADO ===
+
+function limpiarPesadorGuardado() {
+    try {
+        localStorage.removeItem('pesadorActualSeleccionado');
+        console.log('🧹 Pesador guardado eliminado del localStorage');
+    } catch (error) {
+        console.warn('⚠️ Error limpiando pesador guardado:', error);
+    }
+}
+
+// === FUNCIÓN PARA NUEVO PEDIDO EN MULTI-PESADOR ===
+
+async function eliminarPedidoActivoAlNuevoPedido() {
+    try {
+        console.log('🗑️ Eliminando pedido activo del pesador para nuevo pedido...');
+        
+        // Eliminar pedido activo del pesador actual
+        await eliminarPedidoActivoBackend(pesadorActualSeleccionado.username);
+        
+        console.log('✅ Pedido activo eliminado exitosamente');
+        
+        // Redirigir al POS limpio
+        location.assign("/pos");
+        
+    } catch (error) {
+        console.error('❌ Error eliminando pedido activo:', error);
+        
+        // Aunque falle, redirigir al POS (puede que no hubiera pedido activo)
+        console.log('⚠️ Redirigiendo al POS a pesar del error...');
+        location.assign("/pos");
+    }
+}
 
   // ==================== INICIALIZACIÓN Y EVENT LISTENERS ====================

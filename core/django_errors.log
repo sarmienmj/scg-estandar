@@ -948,3 +948,192 @@ ERROR 2025-09-13 05:14:17,699 log 9992 20304 Internal Server Error: /pos/api/pro
 ERROR 2025-09-13 05:14:33,407 log 12588 6900 Internal Server Error: /pos/api/productos/
 ERROR 2025-09-15 22:17:51,257 log 12456 17424 Internal Server Error: /pos/api/productos/
 ERROR 2025-09-15 22:21:10,404 log 19728 3988 Internal Server Error: /pos/api/productos/
+ERROR 2025-09-16 01:01:32,023 log 11444 13184 Internal Server Error: /pos/guardar-pedido-rapido/
+ERROR 2025-09-16 01:02:47,161 log 11444 13184 Internal Server Error: /pos/8/guardar-pedido-rapido/
+ERROR 2025-09-16 20:06:42,664 log 19008 13860 Internal Server Error: /pos/39/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-16 20:06:50,864 log 19008 13860 Internal Server Error: /pos/39/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-16 20:06:58,882 log 19008 13860 Internal Server Error: /pos/39/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-16 20:07:17,128 log 19008 13860 Internal Server Error: /pos/40/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-16 20:29:26,660 log 1548 10512 Internal Server Error: /pos/55/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-16 20:49:44,523 log 20884 21176 Internal Server Error: /pos/59/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 07:34:04,204 log 19996 2588 Internal Server Error: /pos/cargar-pedido-activo/
+ERROR 2025-09-18 07:34:21,676 log 19996 2588 Internal Server Error: /pos/guardar-pedido-activo/
+ERROR 2025-09-18 07:34:41,445 log 19996 2588 Internal Server Error: /pos/guardar-pedido-activo/
+ERROR 2025-09-18 07:34:44,116 log 19996 2588 Internal Server Error: /pos/guardar-pedido-activo/
+ERROR 2025-09-18 07:42:30,900 log 13040 15560 Internal Server Error: /pos/80/
+Traceback (most recent call last):
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\contrib\auth\mixins.py", line 73, in dispatch
+    return super().dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\core\pos\views.py", line 314, in get
+    productos_pedido = pedido[0].get_productos()
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Pedido' object has no attribute 'get_productos'. Did you mean: 'productos'?
+ERROR 2025-09-18 07:47:27,221 log 13040 15560 Internal Server Error: /pos/81/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 07:48:13,559 log 12808 12484 Internal Server Error: /pos/81/
+Traceback (most recent call last):
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\contrib\auth\mixins.py", line 73, in dispatch
+    return super().dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\core\pos\views.py", line 314, in get
+    productos_pedido = pedido[0].get_productos()
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Pedido' object has no attribute 'get_productos'. Did you mean: 'productos'?
+ERROR 2025-09-18 07:48:21,500 log 12808 12484 Internal Server Error: /pos/81/
+Traceback (most recent call last):
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\contrib\auth\mixins.py", line 73, in dispatch
+    return super().dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\core\pos\views.py", line 314, in get
+    productos_pedido = pedido[0].get_productos()
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Pedido' object has no attribute 'get_productos'. Did you mean: 'productos'?
+ERROR 2025-09-18 07:48:24,479 log 12808 12484 Internal Server Error: /pos/81/
+Traceback (most recent call last):
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\contrib\auth\mixins.py", line 73, in dispatch
+    return super().dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\core\pos\views.py", line 314, in get
+    productos_pedido = pedido[0].get_productos()
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Pedido' object has no attribute 'get_productos'. Did you mean: 'productos'?
+ERROR 2025-09-18 07:48:27,649 log 12808 12484 Internal Server Error: /pos/1/
+Traceback (most recent call last):
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\contrib\auth\mixins.py", line 73, in dispatch
+    return super().dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\venv\Lib\site-packages\django\views\generic\base.py", line 143, in dispatch
+    return handler(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Alejandro Sarmiento\Desktop\scg-estandar\scg\core\pos\views.py", line 314, in get
+    productos_pedido = pedido[0].get_productos()
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Pedido' object has no attribute 'get_productos'. Did you mean: 'productos'?
+ERROR 2025-09-18 08:57:53,937 log 17732 18388 Internal Server Error: /pos/86/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 09:02:03,056 log 17732 18388 Internal Server Error: /pos/90/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 09:21:57,545 log 12728 840 Internal Server Error: /pos/95/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 09:22:13,488 log 12728 840 Internal Server Error: /pos/95/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 09:22:48,176 log 12728 840 Internal Server Error: /pos/96/pagina-pago/pagar-pedido-rapido/
+ERROR 2025-09-18 09:24:30,086 log 12728 840 Internal Server Error: /pos/97/pagina-pago/pagar-pedido-rapido/

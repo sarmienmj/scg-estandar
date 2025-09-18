@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "pos",
     "bootstrap5",
-    "django_extensions"
+    # "django_extensions"  # Comentado temporalmente - no está instalado
 ]
 
 LOGIN_REDIRECT_URL = "/"
