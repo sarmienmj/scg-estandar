@@ -595,7 +595,7 @@ function buscarProductos() {
     const nombreProducto = productoInfo[1] ? productoInfo[1].toLowerCase() : "";
     
     // Mostrar el producto si el nombre coincide con la búsqueda o si está vacía
-    if (str_input === "" || nombreProducto.startsWith(str_input)) {
+    if (str_input === "" || nombreProducto.includes(str_input)) {
       productoDiv.show();
     } else {
       productoDiv.hide();
@@ -1177,6 +1177,10 @@ $(document).ready(function () {
 
     $(".agregar-producto-pedido").on("click", function () {
       checkProductoCero();
+      
+      // 🔧 Limpiar string de números al agregar nuevo producto
+      str_numeros = "";
+      
       texto = $("#" + this.id + "> p").text();
       productoInfo = texto.split("-");
       productoid = parseInt(productoInfo[0]);

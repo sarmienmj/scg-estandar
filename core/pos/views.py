@@ -554,7 +554,35 @@ class GuardarPedidoPost(View):
             productos_imprimir = pedido.get_productos()
             pedido.pesador = usuario
             pedido.save()
-            respon = imprimirTicket(id=pedido_id,productos=productos_imprimir,pedido=pedido,usuario="",pesador=usuario,impresora=impresora,reimprimir=False)       
+            
+            # 🧹 LIMPIEZA MULTI-PESADOR: Eliminar pedido activo del pesador
+            try:
+                from .models import PedidoActivo
+                deleted_count, _ = PedidoActivo.objects.filter(username_pesador=usuario).delete()
+                if deleted_count > 0:
+                    print(f"✅ Pedido activo eliminado para pesador: {usuario}")
+            except Exception as e:
+                print(f"⚠️ Error eliminando pedido activo: {str(e)}")
+                # No fallar el guardado por este error
+            
+            # 🔄 MULTI-PESADOR: Verificar si modo multi-pesador está activo para imprimir doble
+            modo_multi_pesador_activo = False
+            try:
+                modo_multi_pesador = request.POST.get('modo_multi_pesador', 'false').lower() == 'true'
+                if modo_multi_pesador:
+                    modo_multi_pesador_activo = True
+                    print(f"🔄 Modo multi-pesador detectado en GuardarPedidoPost - impresión doble activada")
+            except Exception as e:
+                print(f"⚠️ Error verificando modo multi-pesador en GuardarPedidoPost: {str(e)}")
+                modo_multi_pesador_activo = False
+            
+            # Primera impresión (siempre)
+            respon = imprimirTicket(id=pedido_id,productos=productos_imprimir,pedido=pedido,usuario="",pesador=usuario,impresora=impresora,reimprimir=False)
+            
+            # Segunda impresión (solo si multi-pesador está activo)
+            if modo_multi_pesador_activo:
+                print(f"🖨️ Iniciando segunda impresión para modo multi-pesador en GuardarPedidoPost")
+                respon2 = imprimirTicket(id=pedido_id,productos=productos_imprimir,pedido=pedido,usuario="",pesador=usuario,impresora=impresora,reimprimir=False)       
 
         if is_pesador == True:
             url = reverse('pos:pos')
@@ -1001,6 +1029,17 @@ class PagarPedido(View):
             
         pedido.pagado_fecha = timezone.now()
         pedido.save()
+        
+        # 🧹 LIMPIEZA MULTI-PESADOR: Eliminar pedido activo si existe
+        try:
+            if pedido.pesador:  # Si el pedido tiene pesador asignado
+                from .models import PedidoActivo
+                deleted_count, _ = PedidoActivo.objects.filter(username_pesador=pedido.pesador).delete()
+                if deleted_count > 0:
+                    print(f"✅ Pedido activo eliminado para pesador: {pedido.pesador}")
+        except Exception as e:
+            print(f"⚠️ Error eliminando pedido activo: {str(e)}")
+            # No fallar el pago por este error
 
         # Actualizar el dinero esperado en caja DESPUÉS de marcar el pedido como pagado
         try:
@@ -1092,6 +1131,313 @@ class PrePesados(LoginRequiredMixin, View):
             'productos_json': json.dumps(productos_data)
         }
         return render(request, 'pre_pesados.html', context)
+
+class ObtenerPesadores(LoginRequiredMixin, View):
+    """Vista para obtener lista de usuarios con rol PESADOR"""
+    def get(self, request, *args, **kwargs):
+        try:
+            from django.contrib.auth.models import User, Group
+            
+            # Obtener grupo PESADOR
+            try:
+                grupo_pesador = Group.objects.get(name='PESADOR')
+            except Group.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Grupo PESADOR no existe en el sistema'
+                }, status=404)
+            
+            # Obtener usuarios pesadores activos
+            pesadores = User.objects.filter(
+                groups=grupo_pesador, 
+                is_active=True
+            ).order_by('first_name', 'last_name', 'username')
+            
+            pesadores_data = []
+            for pesador in pesadores:
+                # Construir nombre completo
+                nombre_completo = f"{pesador.first_name} {pesador.last_name}".strip()
+                if not nombre_completo:
+                    nombre_completo = pesador.username
+                
+                pesadores_data.append({
+                    'id': pesador.id,
+                    'username': pesador.username,
+                    'nombre': pesador.first_name,
+                    'apellido': pesador.last_name,
+                    'nombre_completo': nombre_completo,
+                    'email': pesador.email,
+                    'fecha_registro': pesador.date_joined.isoformat() if pesador.date_joined else None,
+                    'ultimo_login': pesador.last_login.isoformat() if pesador.last_login else None
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'pesadores': pesadores_data,
+                'total': len(pesadores_data)
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al obtener pesadores: {str(e)}'
+            }, status=500)
+
+
+
+class GuardarPedidoActivo(LoginRequiredMixin, View):
+    """
+    Vista para guardar el pedido activo del pesador en modo multi-pesador.
+    Permite persistir el estado del pedido para que pueda continuar en otra estación.
+    """
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            from .models import PedidoActivo
+            
+            # Debug: Log request details
+            print(f"🔍 GuardarPedidoActivo - Content-Type: {request.content_type}")
+            print(f"🔍 GuardarPedidoActivo - Request body: {request.body}")
+            
+            # Parsear datos del request
+            try:
+                body = json.loads(request.body)
+                print(f"✅ JSON parsed successfully: {body}")
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON decode error: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'error': f'JSON inválido: {str(e)}'
+                }, status=400)
+            
+            # Validar campos requeridos
+            required_fields = ['username_pesador', 'pedido_json', 'precio_total']
+            for field in required_fields:
+                if field not in body:
+                    print(f"❌ Campo faltante: {field}")
+                    return JsonResponse({
+                        'success': False,
+                        'error': f'Campo requerido: {field}'
+                    }, status=400)
+            
+            username_pesador = body['username_pesador']
+            pedido_json = body['pedido_json']
+            precio_total = float(body['precio_total'])
+            cliente_id = body.get('cliente_id', 0)
+            cliente_nombre = body.get('cliente_nombre', 'Cliente')
+            estacion_actual = body.get('estacion_actual', '')
+            
+            # Validar que el usuario sea un pesador autorizado
+            from django.contrib.auth.models import User, Group
+            try:
+                user = User.objects.get(username=username_pesador)
+                grupo_pesador = Group.objects.get(name='PESADOR')
+                if not user.groups.filter(name='PESADOR').exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Usuario no autorizado para modo multi-pesador'
+                    }, status=403)
+            except (User.DoesNotExist, Group.DoesNotExist):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Usuario o grupo PESADOR no encontrado'
+                }, status=404)
+            
+            # Validar que el pedido no esté vacío
+            if not pedido_json or len(pedido_json) == 0:
+                # Si el pedido está vacío, eliminar el registro existente si existe
+                PedidoActivo.objects.filter(username_pesador=username_pesador).delete()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Pedido activo eliminado (pedido vacío)',
+                    'action': 'deleted'
+                })
+            
+            # Crear o actualizar el pedido activo
+            pedido_activo, created = PedidoActivo.objects.update_or_create(
+                username_pesador=username_pesador,
+                defaults={
+                    'pedido_json': pedido_json,
+                    'precio_total': precio_total,
+                    'cliente_id': cliente_id,
+                    'cliente_nombre': cliente_nombre,
+                    'estacion_actual': estacion_actual
+                }
+            )
+            
+            action = 'created' if created else 'updated'
+            message = f'Pedido activo {"creado" if created else "actualizado"} exitosamente'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'action': action,
+                'pedido_activo': {
+                    'id': pedido_activo.id,
+                    'username_pesador': pedido_activo.username_pesador,
+                    'numero_productos': pedido_activo.numero_productos,
+                    'precio_total': pedido_activo.precio_total,
+                    'cliente_nombre': pedido_activo.cliente_nombre,
+                    'fecha_ultima_modificacion': pedido_activo.fecha_ultima_modificacion.isoformat(),
+                    'productos_display': pedido_activo.get_productos_display()
+                }
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'JSON inválido en el cuerpo de la petición'
+            }, status=400)
+        except ValueError as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error en los datos: {str(e)}'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error interno del servidor: {str(e)}'
+            }, status=500)
+
+
+
+class CargarPedidoActivo(LoginRequiredMixin, View):
+    """
+    Vista para cargar el pedido activo de un pesador específico.
+    Permite recuperar el estado del pedido cuando cambia de estación.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            from .models import PedidoActivo
+            
+            # Debug: Log request details
+            print(f"🔍 CargarPedidoActivo - GET params: {request.GET}")
+            
+            # Obtener username del pesador desde parámetros
+            username_pesador = request.GET.get('username_pesador')
+            print(f"🔍 CargarPedidoActivo - username_pesador: {username_pesador}")
+            
+            if not username_pesador:
+                print("❌ username_pesador no proporcionado")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Parámetro username_pesador es requerido'
+                }, status=400)
+            
+            # Validar que el usuario sea un pesador autorizado
+            from django.contrib.auth.models import User, Group
+            try:
+                user = User.objects.get(username=username_pesador)
+                if not user.groups.filter(name='PESADOR').exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Usuario no autorizado para modo multi-pesador'
+                    }, status=403)
+            except User.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Usuario no encontrado'
+                }, status=404)
+            
+            # Buscar pedido activo del pesador
+            try:
+                pedido_activo = PedidoActivo.objects.get(username_pesador=username_pesador)
+                
+                return JsonResponse({
+                    'success': True,
+                    'tiene_pedido_activo': True,
+                    'pedido_activo': {
+                        'id': pedido_activo.id,
+                        'username_pesador': pedido_activo.username_pesador,
+                        'pedido_json': pedido_activo.pedido_json,
+                        'precio_total': pedido_activo.precio_total,
+                        'cliente_id': pedido_activo.cliente_id,
+                        'cliente_nombre': pedido_activo.cliente_nombre,
+                        'numero_productos': pedido_activo.numero_productos,
+                        'fecha_creacion': pedido_activo.fecha_creacion.isoformat(),
+                        'fecha_ultima_modificacion': pedido_activo.fecha_ultima_modificacion.isoformat(),
+                        'estacion_actual': pedido_activo.estacion_actual,
+                        'productos_display': pedido_activo.get_productos_display()
+                    }
+                })
+                
+            except PedidoActivo.DoesNotExist:
+                return JsonResponse({
+                    'success': True,
+                    'tiene_pedido_activo': False,
+                    'message': 'No hay pedido activo para este pesador'
+                })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al cargar pedido activo: {str(e)}'
+            }, status=500)
+
+
+
+class EliminarPedidoActivo(LoginRequiredMixin, View):
+    """
+    Vista para eliminar el pedido activo de un pesador.
+    Se usa cuando se finaliza/guarda un pedido y ya no debe estar activo.
+    """
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            from .models import PedidoActivo
+            
+            # Parsear datos del request
+            body = json.loads(request.body)
+            username_pesador = body.get('username_pesador')
+            
+            if not username_pesador:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Campo username_pesador es requerido'
+                }, status=400)
+            
+            # Validar autorización del usuario
+            from django.contrib.auth.models import User
+            try:
+                user = User.objects.get(username=username_pesador)
+                if not user.groups.filter(name='PESADOR').exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Usuario no autorizado'
+                    }, status=403)
+            except User.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Usuario no encontrado'
+                }, status=404)
+            
+            # Eliminar pedido activo si existe
+            deleted_count, _ = PedidoActivo.objects.filter(username_pesador=username_pesador).delete()
+            
+            if deleted_count > 0:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Pedido activo eliminado exitosamente',
+                    'deleted': True
+                })
+            else:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'No había pedido activo para eliminar',
+                    'deleted': False
+                })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'error': 'JSON inválido en el cuerpo de la petición'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al eliminar pedido activo: {str(e)}'
+            }, status=500)
 
 class ImprimirEtiquetaTSPL(LoginRequiredMixin, View):
     """
@@ -1983,9 +2329,12 @@ class CategoriaUpdateView(LoginRequiredMixin,UpdateView):
 
 class CategoriaDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        categoria = CategoriasProductos.objects.get(pk=pk)
-        categoria.delete()
-        return redirect('pos:productos')
+        try:
+            categoria = CategoriasProductos.objects.get(pk=pk)
+            categoria.delete()
+        except CategoriasProductos.DoesNotExist:
+            pass
+        return redirect('pos:categorias')
     
 class CrearUsuarioView(LoginRequiredMixin,CreateView):
     model = User
@@ -2323,9 +2672,12 @@ class BuscarProductoNombreMenu(View):
             productos = Producto.objects.filter().order_by('nombre')
         else:
             if buscar.isnumeric(): productos = Producto.objects.filter(id=buscar).order_by('nombre')
-            else: productos = Producto.objects.filter(nombre__startswith=buscar).order_by('nombre')
+            else: productos = Producto.objects.filter(nombre__icontains=buscar).order_by('nombre')
 
         for producto in productos:
+            # Obtener las categorías del producto
+            categorias = [{'id': cat.id, 'nombre': cat.nombre} for cat in producto.categoria.all()]
+            
             producto_arr = {
                 'id':producto.id,
                 'nombre':producto.nombre,
@@ -2335,6 +2687,7 @@ class BuscarProductoNombreMenu(View):
                 'costo':producto.costo,
                 'precio_detal':producto.precio_detal,
                 'precio_mayor':producto.precio_mayor,
+                'categorias': categorias,
             }
             productos_arr.append(producto_arr)
 
@@ -4807,14 +5160,50 @@ class GuardarPedidoRapido(View):
                 pedido_final.save()
                 url_redireccion = reverse('pos:pos')
                 
+                # 🧹 LIMPIEZA MULTI-PESADOR: Eliminar pedido activo del pesador
+                try:
+                    from .models import PedidoActivo
+                    deleted_count, _ = PedidoActivo.objects.filter(username_pesador=usuario).delete()
+                    if deleted_count > 0:
+                        print(f"✅ Pedido activo eliminado para pesador: {usuario}")
+                except Exception as e:
+                    print(f"⚠️ Error eliminando pedido activo: {str(e)}")
+                    # No fallar el guardado por este error
+                
                 # 🖨️ IMPRESIÓN ASÍNCRONA: Solo para PESADORES
                 import threading
-                thread = threading.Thread(
+                
+                # 🔄 MULTI-PESADOR: Verificar si modo multi-pesador está activo para imprimir doble
+                modo_multi_pesador_activo = False
+                try:
+                    # Verificar localStorage del frontend (se enviará como parámetro en futuras versiones)
+                    # Por ahora, verificar si hay pesadores autorizados configurados
+                    config_json = leer_configuracion()
+                    modo_multi_pesador = request.POST.get('modo_multi_pesador', 'false').lower() == 'true'
+                    if modo_multi_pesador:
+                        modo_multi_pesador_activo = True
+                        print(f"🔄 Modo multi-pesador detectado - impresión doble activada")
+                except Exception as e:
+                    print(f"⚠️ Error verificando modo multi-pesador: {str(e)}")
+                    modo_multi_pesador_activo = False
+                
+                # Primera impresión (siempre)
+                thread1 = threading.Thread(
                     target=imprimir_ticket_async, 
-                    args=(pedido_id, impresora, modo_impresion)  # PASAR MODO DE IMPRESIÓN
+                    args=(pedido_id, impresora, modo_impresion)
                 )
-                thread.daemon = True
-                thread.start()
+                thread1.daemon = True
+                thread1.start()
+                
+                # Segunda impresión (solo si multi-pesador está activo)
+                if modo_multi_pesador_activo:
+                    print(f"🖨️ Iniciando segunda impresión para modo multi-pesador")
+                    thread2 = threading.Thread(
+                        target=imprimir_ticket_async, 
+                        args=(pedido_id, impresora, modo_impresion)
+                    )
+                    thread2.daemon = True
+                    thread2.start()
                 
                 return JsonResponse({
                     "success": True,
@@ -5091,6 +5480,17 @@ class PagarPedidoRapido(View):
                 
             pedido.pagado_fecha = timezone.now()
             pedido.save()
+            
+            # 🧹 LIMPIEZA MULTI-PESADOR: Eliminar pedido activo si existe
+            try:
+                if pedido.pesador:  # Si el pedido tiene pesador asignado
+                    from .models import PedidoActivo
+                    deleted_count, _ = PedidoActivo.objects.filter(username_pesador=pedido.pesador).delete()
+                    if deleted_count > 0:
+                        print(f"✅ Pedido activo eliminado para pesador: {pedido.pesador}")
+            except Exception as e:
+                print(f"⚠️ Error eliminando pedido activo: {str(e)}")
+                # No fallar el pago por este error
 
             # 💰 ACTUALIZAR DINERO ESPERADO EN CAJA (ya validada arriba)
             dinero_esperado = caja_actual.dineroEsperado or {
@@ -5312,7 +5712,7 @@ class ProductoDetailView(View):
             }, status=500)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+
 class CrearPedidoPesadorAPI(View):
     """
     API Endpoint: POST /api/pedidos/pesador/
@@ -5768,7 +6168,7 @@ class ReimprimirTicketAPI(View):
     Reimprime el ticket de un pedido existente
     """
     
-    @method_decorator(csrf_exempt, name='dispatch')
+    
     def post(self, request):
         try:
             # Parsear body JSON
@@ -5897,7 +6297,7 @@ class LoginAPI(View):
     Autentica usuario y retorna información de sesión para React Native
     """
     
-    @method_decorator(csrf_exempt, name='dispatch')
+    
     def post(self, request):
         try:
             # Parsear body JSON
@@ -6020,7 +6420,7 @@ class LogoutAPI(View):
     Cierra sesión del usuario (principalmente para limpiar datos locales)
     """
     
-    @method_decorator(csrf_exempt, name='dispatch')
+    
     def post(self, request):
         try:
             # Parsear body JSON (opcional)
@@ -6060,7 +6460,7 @@ class ValidateTokenAPI(View):
     Valida si un token de sesión sigue siendo válido
     """
     
-    @method_decorator(csrf_exempt, name='dispatch')
+    
     def post(self, request):
         try:
             # Parsear body JSON
@@ -6168,7 +6568,7 @@ class BalanzaImpresoraIp(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin,View):
         return HttpResponse(200)
 
 # Nueva vista principal de configuración
-class ConfiguracionDispositivos(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View):
+class ConfiguracionDispositivos(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         # Recargar configuración para obtener datos actualizados
         global IMPRESORAS, IMPRESORAS_ETIQUETAS, BALANZAS
@@ -6207,11 +6607,15 @@ class ConfiguracionDispositivos(ADMIN_SUPERVISOR_AUTH, LoginRequiredMixin, View)
             request.user.groups.filter(name__in=['ADMINISTRADOR', 'SUPERVISOR']).exists()
         )
         
+        # Configuración multi-pesador disponible para todos los usuarios autenticados
+        es_pesador = True  # Permitir acceso a todos los usuarios
+        
         context = {
             'impresoras': impresoras_estado,
             'impresoras_etiquetas': impresoras_etiquetas_estado,
             'balanzas': balanzas_estado,
-            'puede_gestionar': puede_gestionar
+            'puede_gestionar': puede_gestionar,
+            'es_pesador': es_pesador
         }
         return render(request, 'configuracion_dispositivos.html', context)
 

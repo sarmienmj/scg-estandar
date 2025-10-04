@@ -23,7 +23,7 @@
       <div class="row align-items-center">
         <div class="col-md-8">
           <h1 class="productos-title">
-            <i class="fas fa-box me-3"></i>Gestión de Productos
+            📦 Gestión de Productos
           </h1>
           <p class="productos-subtitle">
             Administra tu inventario de productos de manera eficiente
@@ -31,7 +31,7 @@
         </div>
         <div class="col-md-4 text-md-end">
           <button type="button" id="boton-crear-producto" class="btn btn-success-custom">
-            <i class="fas fa-plus me-2"></i>Crear Producto
+            ➕ Crear Producto
           </button>
         </div>
       </div>
@@ -45,7 +45,7 @@
         <div class="col-lg-3 col-md-6">
           <div class="input-group">
             <span class="input-group-text">
-              <i class="fas fa-search"></i>
+              🔍
             </span>
             <input type="text" class="form-control form-control-custom" 
                    id="buscar-producto-nombre-list" 
@@ -54,13 +54,13 @@
         </div>
         <div class="col-lg-2 col-md-6">
           <button id="buscar-producto-nombre-btn" type="button" class="btn btn-primary-custom w-100">
-            <i class="fas fa-search me-2"></i>Buscar
+            🔍 Buscar
           </button>
         </div>
         <div class="col-lg-3 col-md-6">
           <div class="input-group">
             <span class="input-group-text">
-              <i class="fas fa-barcode"></i>
+              🔢
             </span>
             <input type="text" class="form-control form-control-custom" 
                    id="buscar-producto-id-list" 
@@ -69,12 +69,12 @@
         </div>
         <div class="col-lg-2 col-md-6">
           <button id="buscar-producto-id-btn" type="button" class="btn btn-primary-custom w-100">
-            <i class="fas fa-search me-2"></i>Buscar
+            🔍 Buscar
           </button>
         </div>
         <div class="col-lg-2 col-md-12">
           <button type="button" class="btn btn-success-custom w-100" onclick="location.reload()">
-            <i class="fas fa-sync-alt me-2"></i>Refrescar
+            🔄 Refrescar
           </button>
         </div>
       </div>
@@ -84,7 +84,7 @@
     <div class="products-table-container">
       <div class="table-header">
         <h3 class="mb-0">
-          <i class="fas fa-list me-2"></i>Lista de Productos
+          📋 Lista de Productos
         </h3>
       </div>
       
@@ -97,6 +97,7 @@
                 <th scope="col">Nombre</th>
                 <th scope="col">Cantidad</th>
                 <th scope="col">Unidad</th>
+                <th scope="col">Moneda</th>
                 <th scope="col">Costo</th>
                 <th scope="col">Precio Detal</th>
                 <th scope="col">Precio Mayor</th>
@@ -111,13 +112,16 @@
                 <td class="product-name">{{ producto.nombre }}</td>
                 <td class="product-quantity">
                   {% if producto.cantidad %}
-                    {{ producto.cantidad }}
+                    {{ producto.cantidad|stringformat:"g"|slice:":8" }}
                   {% else %}
                     <span class="text-muted">-</span>
                   {% endif %}
                 </td>
                 <td>
                   <span class="badge bg-secondary">{{ producto.unidad }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-primary">{{ producto.moneda }}</span>
                 </td>
                 <td class="product-price">
                   {% if producto.costo %}
@@ -145,18 +149,18 @@
                   <div class="btn-group" role="group">
                     <a href="edit/{{ producto.pk }}" class="btn btn-action btn-edit me-1" 
                        title="Modificar producto">
-                      <i class="fas fa-edit"></i>
+                      ✏️
                     </a>
                     <a href="cantidad/{{ producto.pk }}" class="btn btn-action btn-quantity me-1" 
                        title="Ajustar cantidad">
-                      <i class="fas fa-plus-minus"></i>
+                      ±
                     </a>
                     <form method="post" action="delete/{{ producto.pk }}" 
                           style="display: inline;" 
                           onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?')">
                       <button type="submit" class="btn btn-action btn-delete" 
                               title="Eliminar producto">
-                        <i class="fas fa-trash"></i>
+                        🗑️
                       </button>
                     </form>
                   </div>
@@ -167,11 +171,11 @@
           </table>
         {% else %}
           <div class="empty-state">
-            <i class="fas fa-box-open"></i>
+            <div style="font-size: 48px;">📦</div>
             <h4>No hay productos registrados</h4>
             <p>Comienza creando tu primer producto para gestionar tu inventario.</p>
             <button type="button" id="boton-crear-producto-empty" class="btn btn-success-custom">
-              <i class="fas fa-plus me-2"></i>Crear Primer Producto
+              ➕ Crear Primer Producto
             </button>
           </div>
         {% endif %}
@@ -213,7 +217,7 @@
     const button = document.getElementById(buttonId);
     if (button) {
       const originalText = button.innerHTML;
-      button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando...';
+      button.innerHTML = '⏳ Buscando...';
       button.disabled = true;
       
       setTimeout(() => {

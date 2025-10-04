@@ -274,7 +274,7 @@ function numerosTeclado(id) {
 function scrollProductoEnPedido(id) {
   position = 0;
   for (i in pedido) {
-    if (pedido[i].uniqueId == id) {
+    if (pedido[i].id == id) {
       position = i;
     }
   }
@@ -487,10 +487,10 @@ function aumentarCantidadUno(id) {
         pedido_cargado_modificado = true;
 
         if (moneda == "USD") {
-          precioUsd = precio * cantidad;
+          precioUsd = producto.precio * cantidad;
           precioBs = precioUsd * bcv;
         } else if (moneda == "BS") {
-          precioBs = precio * cantidad;
+          precioBs = producto.precio * cantidad;
           precioUsd = precioBs / bcv;
         }
 
@@ -505,7 +505,6 @@ function aumentarCantidadUno(id) {
       }
     }
   });
-  cambiarPrecioTotal();
 }
 function mueveReloj() {
   momentoActual = new Date();
@@ -596,7 +595,7 @@ function buscarProductos() {
     const nombreProducto = productoInfo[1] ? productoInfo[1].toLowerCase() : "";
     
     // Mostrar el producto si el nombre coincide con la búsqueda o si está vacía
-    if (str_input === "" || nombreProducto.startsWith(str_input)) {
+    if (str_input === "" || nombreProducto.includes(str_input)) {
       productoDiv.show();
     } else {
       productoDiv.hide();
@@ -1178,6 +1177,10 @@ $(document).ready(function () {
 
     $(".agregar-producto-pedido").on("click", function () {
       checkProductoCero();
+      
+      // 🔧 Limpiar string de números al agregar nuevo producto
+      str_numeros = "";
+      
       texto = $("#" + this.id + "> p").text();
       productoInfo = texto.split("-");
       productoid = parseInt(productoInfo[0]);
@@ -1189,8 +1192,9 @@ $(document).ready(function () {
         pedido.forEach((p) => {
           if (p.id == productoid) {
             scrollProductoEnPedido(productoid);
-          aumentarCantidadUno(productoid);
-          cambiarPrecioProductoPedido(p.uniqueId);
+            aumentarCantidadUno(p.uniqueId);
+            cambiarPrecioProductoPedido(p.uniqueId);
+            cambiarPrecioTotal();
           }
         });
           

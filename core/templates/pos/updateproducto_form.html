@@ -465,8 +465,8 @@
 </div>
 
 <script>
-// Preview de imagen
 document.addEventListener('DOMContentLoaded', function() {
+    // Preview de imagen
     const imageInput = document.getElementById('{{ form.imagen.id_for_label }}');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImage = document.getElementById('image-preview');
@@ -485,6 +485,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewContainer.style.display = 'none';
             }
         });
+    }
+
+    // Bloquear el carácter "-" en todos los campos excepto el campo cantidad
+    const allInputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea');
+    const cantidadInput = document.getElementById('{{ form.cantidad.id_for_label }}');
+    
+    allInputs.forEach(input => {
+        // Permitir "-" solo en el campo cantidad
+        if (input === cantidadInput) {
+            return;
+        }
+        
+        input.addEventListener('keypress', function(e) {
+            if (e.key === '-') {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // También prevenir al pegar
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            const cleanedText = pastedText.replace(/-/g, '');
+            document.execCommand('insertText', false, cleanedText);
+        });
+    });
+
+    // Validación del formulario antes de enviar
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const cantidadInput = document.getElementById('{{ form.cantidad.id_for_label }}');
+            
+            // Validar que cantidad no esté vacía
+            if (!cantidadInput.value || cantidadInput.value.trim() === '') {
+                e.preventDefault();
+                alert('⚠️ El campo Cantidad es obligatorio. Por favor, ingrese una cantidad válida.');
+                cantidadInput.focus();
+                return false;
+            }
+            
+            // Validar que cantidad sea numérica
+            const cantidadValue = parseFloat(cantidadInput.value);
+            if (isNaN(cantidadValue)) {
+                e.preventDefault();
+                alert('⚠️ El campo Cantidad debe ser un valor numérico.');
+                cantidadInput.focus();
+                return false;
+            }
+        });
+    }
+    
+    // Hacer el campo cantidad obligatorio visualmente
+    const cantidadLabel = document.querySelector('label[for="{{ form.cantidad.id_for_label }}"]');
+    if (cantidadLabel && !cantidadLabel.querySelector('.required-asterisk')) {
+        const asterisk = document.createElement('span');
+        asterisk.className = 'required-asterisk';
+        asterisk.style.color = 'red';
+        asterisk.style.marginLeft = '5px';
+        asterisk.textContent = '*';
+        cantidadLabel.appendChild(asterisk);
     }
 });
 </script>
