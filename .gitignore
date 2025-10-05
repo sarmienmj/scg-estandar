@@ -1,1 +1,40 @@
+# Entorno virtual
 venv/
+env/
+ENV/
+
+# Archivos de Python
+*.pyc
+*.pyo
+__pycache__/
+*.so
+
+# Archivos de base de datos
+*.sqlite3
+*.db
+
+# Archivos de logs
+*.log
+django_errors.log
+
+# Archivos de media (opcional, depende de tu caso)
+# media/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Archivos estáticos recolectados (Django collectstatic)
+# staticfiles/
+
+# NO ignorar migraciones (son necesarias)
+# !*/migrations/
+# !*/migrations/*.py
