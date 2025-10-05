@@ -319,8 +319,8 @@ code {
 
 <body>
     <!-- Botón para volver -->
-    <a href="/pos/" class="btn btn-primary btn-volver">
-        <i class="fas fa-arrow-left"></i> Volver al POS
+    <a href="{% url 'pos:home' %}" class="btn btn-primary btn-volver">
+        <i class="fas fa-arrow-left"></i> Volver al Home
     </a>
 
     <!-- Header independiente -->
@@ -610,7 +610,7 @@ code {
                                     <th style="width: 10%;">ID</th>
                                     <th style="width: 20%;">Nombre</th>
                                     <th style="width: 20%;">IP</th>
-                                    <th style="width: 15%;">Prueba</th>
+                                    <th style="width: 15%; display: none;">Prueba</th>
                                     <th style="width: 15%;">Seleccionar</th>
                                     <th style="width: 20%;">Acciones</th>
                                 </tr>
@@ -621,7 +621,7 @@ code {
                                     <td><strong>{{ bal_id }}</strong></td>
                                     <td>{{ balanza.nombre }}</td>
                                     <td><code>{{ balanza.ip }}</code></td>
-                                    <td>
+                                    <td style="display: none;">
                                         <button class="btn btn-outline-success btn-sm" 
                                                 onclick="probarBalanza('{{ bal_id }}')"
                                                 id="btn-test-bal-{{ bal_id }}"
