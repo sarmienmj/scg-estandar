@@ -36,7 +36,7 @@ class Producto(models.Model):
         ]
 
     nombre = models.CharField(max_length=50)
-    cantidad = models.FloatField( blank=True,null=True,default=0)
+    cantidad = models.FloatField(blank=False, null=False, default=0)
     unidad = models.CharField(max_length=20, choices=UNIDAD_OPCIONES)
     moneda = models.CharField(max_length=20, choices=MONEDA_OPCIONES)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)

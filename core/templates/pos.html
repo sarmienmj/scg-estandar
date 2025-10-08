@@ -10,7 +10,7 @@
   <div class="container-fluid">
 
     <a class="navbar-brand" href="#">
-      <img src="/media/logo.png" alt="Bootstrap" width="70">
+      <img src="{{ BUSINESS_LOGO }}" alt="{{ BUSINESS_NAME }}" width="70">
     </a>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -821,7 +821,7 @@
               <img src="{{ producto.imagen.url }}"
                 class="img-fluid" alt="{{ producto.nombre }}" style="max-width: 80px; max-height: 80px; object-fit: contain;">
             {% else %}
-              <img src="/media/logo.png"
+              <img src="{{ BUSINESS_LOGO }}"
                 class="img-fluid" alt="{{ producto.nombre }}" style="max-width: 80px; max-height: 80px; object-fit: contain;">
             {% endif %}
           </div>

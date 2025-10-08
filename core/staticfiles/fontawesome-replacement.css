@@ -1,0 +1,216 @@
+/* 
+ * Reemplazo de Font Awesome con símbolos Unicode
+ * Sistema 100% offline sin dependencias externas
+ */
+
+/* Configuración base para iconos */
+.fas, .far, .fab {
+    font-style: normal;
+    font-weight: normal;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: inline-block;
+    font-variant: normal;
+    line-height: 1;
+}
+
+/* Iconos usando contenido Unicode y símbolos */
+.fa-edit::before,
+.fas.fa-edit::before { content: "✎"; }
+
+.fa-trash::before,
+.fas.fa-trash::before { content: "🗑"; }
+
+.fa-plus::before,
+.fas.fa-plus::before { content: "+"; font-weight: bold; }
+
+.fa-plus-minus::before,
+.fas.fa-plus-minus::before { content: "±"; }
+
+.fa-search::before,
+.fas.fa-search::before { content: "🔍"; }
+
+.fa-box::before,
+.fas.fa-box::before { content: "📦"; }
+
+.fa-box-open::before,
+.fas.fa-box-open::before { content: "📭"; }
+
+.fa-list::before,
+.fas.fa-list::before { content: "☰"; }
+
+.fa-barcode::before,
+.fas.fa-barcode::before { content: "⧈"; font-weight: bold; }
+
+.fa-sync-alt::before,
+.fas.fa-sync-alt::before { content: "↻"; font-weight: bold; font-size: 1.2em; }
+
+.fa-spinner::before,
+.fas.fa-spinner::before { content: "↻"; }
+
+.fa-spinner.fa-spin {
+    animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-clock::before,
+.fas.fa-clock::before { content: "🕐"; }
+
+.fa-calendar::before,
+.fas.fa-calendar::before { content: "📅"; }
+
+.fa-user::before,
+.fas.fa-user::before { content: "👤"; }
+
+.fa-users::before,
+.fas.fa-users::before { content: "👥"; }
+
+.fa-user-friends::before,
+.fas.fa-user-friends::before { content: "👥"; }
+
+.fa-arrow-left::before,
+.fas.fa-arrow-left::before { content: "←"; font-weight: bold; }
+
+.fa-cogs::before,
+.fas.fa-cogs::before { content: "⚙"; }
+
+.fa-cog::before,
+.fas.fa-cog::before { content: "⚙"; }
+
+.fa-tags::before,
+.fas.fa-tags::before { content: "🏷"; }
+
+.fa-shopping-cart::before,
+.fas.fa-shopping-cart::before { content: "🛒"; }
+
+.fa-chart-line::before,
+.fas.fa-chart-line::before { content: "📈"; }
+
+.fa-chart-bar::before,
+.fas.fa-chart-bar::before { content: "📊"; }
+
+.fa-dollar-sign::before,
+.fas.fa-dollar-sign::before { content: "$"; font-weight: bold; }
+
+.fa-mobile-alt::before,
+.fas.fa-mobile-alt::before { content: "📱"; }
+
+.fa-cash-register::before,
+.fas.fa-cash-register::before { content: "💰"; }
+
+.fa-tachometer-alt::before,
+.fas.fa-tachometer-alt::before { content: "⚡"; }
+
+.fa-leaf::before,
+.fas.fa-leaf::before { content: "🌿"; }
+
+.fa-bars::before,
+.fas.fa-bars::before { content: "☰"; }
+
+.fa-times::before,
+.fas.fa-times::before { content: "✕"; font-weight: bold; }
+
+.fa-home::before,
+.fas.fa-home::before { content: "🏠"; }
+
+.fa-print::before,
+.fas.fa-print::before { content: "🖨"; }
+
+.fa-weight::before,
+.fas.fa-weight::before { content: "⚖"; }
+
+.fa-weight-hanging::before,
+.fas.fa-weight-hanging::before { content: "⚖"; }
+
+.fa-balance-scale-left::before,
+.fas.fa-balance-scale-left::before { content: "⚖"; }
+
+.fa-check::before,
+.fas.fa-check::before { content: "✓"; font-weight: bold; }
+
+.fa-check-circle::before,
+.fas.fa-check-circle::before { content: "✓"; font-weight: bold; }
+
+.fa-exclamation-triangle::before,
+.fas.fa-exclamation-triangle::before { content: "⚠"; }
+
+.fa-times-circle::before,
+.fas.fa-times-circle::before { content: "✕"; }
+
+.fa-question-circle::before,
+.fas.fa-question-circle::before { content: "?"; font-weight: bold; }
+
+.fa-info-circle::before,
+.fas.fa-info-circle::before { content: "ℹ"; font-weight: bold; }
+
+.fa-save::before,
+.fas.fa-save::before { content: "💾"; }
+
+.fa-envelope::before,
+.fas.fa-envelope::before { content: "✉"; }
+
+.fa-hashtag::before,
+.fas.fa-hashtag::before { content: "#"; }
+
+.fa-star::before,
+.fas.fa-star::before { content: "★"; }
+
+.fa-plus-circle::before,
+.fas.fa-plus-circle::before { content: "⊕"; }
+
+.fa-toggle-off::before,
+.fas.fa-toggle-off::before { content: "⬜"; }
+
+.fa-toggle-on::before,
+.fas.fa-toggle-on::before { content: "✓"; }
+
+.fa-undo::before,
+.fas.fa-undo::before { content: "↶"; }
+
+.fa-redo::before,
+.fas.fa-redo::before { content: "↷"; }
+
+.fa-retry::before,
+.fas.fa-retry::before { content: "↻"; }
+
+.fa-receipt::before,
+.fas.fa-receipt::before { content: "🧾"; }
+
+.fa-user-plus::before,
+.fas.fa-user-plus::before { content: "👤+"; }
+
+.fa-users-cog::before,
+.fas.fa-users-cog::before { content: "👥⚙"; }
+
+.fa-sign-out-alt::before,
+.fas.fa-sign-out-alt::before { content: "→"; font-weight: bold; }
+
+/* Ajustes de espaciado para compatibilidad con Font Awesome */
+.me-1 { margin-right: 0.25rem !important; }
+.me-2 { margin-right: 0.5rem !important; }
+.me-3 { margin-right: 1rem !important; }
+.ms-1 { margin-left: 0.25rem !important; }
+.ms-2 { margin-left: 0.5rem !important; }
+.ms-3 { margin-left: 1rem !important; }
+
+/* Tamaños de iconos */
+.fa-2x { font-size: 2em; }
+.fa-3x { font-size: 3em; }
+.fa-4x { font-size: 4em; }
+.fa-5x { font-size: 5em; }
+
+/* Rotación de iconos */
+.fa-rotate-90 { transform: rotate(90deg); }
+.fa-rotate-180 { transform: rotate(180deg); }
+.fa-rotate-270 { transform: rotate(270deg); }
+
+/* Iconos fijos de ancho */
+.fa-fw {
+    text-align: center;
+    width: 1.25em;
+}

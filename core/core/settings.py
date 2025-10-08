@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "pos",
     "bootstrap5",
+    "constance",
+    "constance.backends.database",
     # "django_extensions"  # Comentado temporalmente - no está instalado
 ]
 
@@ -269,6 +271,18 @@ for handler in logging.root.handlers:
 
 # Nombre de la sucursal/negocio (configurable)
 SUCURSAL = "LOS CHAMITOS"
+
+# Configuración Django-Constance
+CONSTANCE_BACKEND = 'constance.backends.database.DatabaseBackend'
+
+CONSTANCE_CONFIG = {
+    'BUSINESS_NAME': ('LOS CHAMITOS', 'Nombre del negocio (aparece en tickets y sistema)'),
+    'BUSINESS_LOGO': ('/media/logo.png', 'Ruta del logo del negocio (ej: /media/logos/mi_logo.png)'),
+}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    'Información del Negocio': ('BUSINESS_NAME', 'BUSINESS_LOGO'),
+}
 
 # URL base para la API (usado por serializers para generar URLs de imágenes)
 API_BASE_URL = "http://192.168.1.107:8004"

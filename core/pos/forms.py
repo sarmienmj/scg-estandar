@@ -10,6 +10,9 @@ class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = ['nombre','cantidad', 'unidad','moneda', 'imagen', 'barcode', 'costo', 'precio_detal','categoria','subproducto','relacion_subproducto']
+        labels = {
+            'cantidad': 'Cantidad disponible *',
+        }
         widgets = {
             'nombre': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -17,9 +20,11 @@ class ProductoForm(forms.ModelForm):
             }),
             'cantidad': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Cantidad disponible',
+                'placeholder': 'Cantidad disponible (requerido)',
                 'min': '0',
-                'step': '0.01'
+                'step': '0.01',
+                'required': 'required',
+                'value': '0'
             }),
             'unidad': forms.Select(choices=Producto.UNIDAD_OPCIONES, attrs={
                 'class': 'form-select'
@@ -72,8 +77,19 @@ class ProductoForm(forms.ModelForm):
         form.save_m2m()
         return super().form_valid(form)
    
+    def clean_cantidad(self):
+        cantidad = self.cleaned_data.get('cantidad')
+        if cantidad is None:
+            return 0  # Valor por defecto si viene None
+        if cantidad < 0:
+            raise forms.ValidationError("La cantidad no puede ser negativa.")
+        return cantidad
+    
     def save(self, commit=True):
         instancia = super().save(commit=False)
+        # Asegurar que la cantidad nunca sea None
+        if instancia.cantidad is None:
+            instancia.cantidad = 0
         if commit:
             instancia.save()
         instancia.categoria.set(self.cleaned_data['categoria'])

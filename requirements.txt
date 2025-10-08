@@ -7,6 +7,7 @@ click==8.2.1
 colorama==0.4.6
 Django==4.2
 django-bootstrap-v5==1.0.11
+django-constance[database]
 django-extensions==4.1
 h11==0.16.0
 httptools==0.6.4

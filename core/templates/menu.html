@@ -8,7 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Administración - SCG POS{% endblock title %}</title>
   <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
-  <link rel="icon" type="image/x-icon" href="/media/logo.png">
+  <link rel="icon" type="image/x-icon" href="{{ BUSINESS_LOGO }}">
+  <link rel="stylesheet" href="{% static 'fontawesome-replacement.css' %}">
   <link rel="stylesheet" href="{% static 'styles.css' %}">
   <link rel="stylesheet" src="{% static '/jquery-ui-1.13.2.custom/jquery-ui.css' %}">
   
@@ -835,7 +836,7 @@
     <div class="container-fluid">
       <!-- Logo -->
       <a class="navbar-brand" href="#">
-        <img src="/media/logo.png" alt="Logo SCG POS">
+        <img src="{{ BUSINESS_LOGO }}" alt="{{ BUSINESS_NAME }}">
       </a>
 
       <!-- Mobile menu toggle button -->

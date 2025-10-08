@@ -6,6 +6,7 @@
 {% block content %}
 <!-- Incluir CSS específico para productos -->
 <link rel="stylesheet" href="{% static 'productos.css' %}">
+<link rel="stylesheet" href="{% static 'styles.css' %}">
 <style>
   /* Quitar animaciones de inicio */
   .productos-container {
@@ -99,7 +100,6 @@
                 <th scope="col">Unidad</th>
                 <th scope="col">Costo</th>
                 <th scope="col">Precio Detal</th>
-                <th scope="col">Precio Mayor</th>
                 <th scope="col">Categoría</th>
                 <th scope="col" class="text-center">Acciones</th>
               </tr>
@@ -110,8 +110,8 @@
                 <td class="product-id">#{{ producto.pk }}</td>
                 <td class="product-name">{{ producto.nombre }}</td>
                 <td class="product-quantity">
-                  {% if producto.cantidad %}
-                    {{ producto.cantidad }}
+                  {% if producto.cantidad_formateada %}
+                    {{ producto.cantidad_formateada }}
                   {% else %}
                     <span class="text-muted">-</span>
                   {% endif %}
@@ -126,12 +126,11 @@
                     <span class="text-muted">-</span>
                   {% endif %}
                 </td>
-                <td class="product-price">${{ producto.precio_detal }}</td>
                 <td class="product-price">
-                  {% if producto.precio_mayor %}
-                    ${{ producto.precio_mayor }}
+                  {% if producto.moneda == 'USD' %}
+                    ${{ producto.precio_detal }} <span class="badge bg-success">USD</span>
                   {% else %}
-                    <span class="text-muted">-</span>
+                    {{ producto.precio_detal }} Bs. <span class="badge bg-primary">BS</span>
                   {% endif %}
                 </td>
                 <td class="product-category">

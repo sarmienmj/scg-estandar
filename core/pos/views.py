@@ -10,6 +10,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.hashers import check_password
 import threading
 from django.conf import settings
+from constance import config
 
 from django.contrib.auth.models import *
 from django.db.models import Sum
@@ -844,7 +845,7 @@ def imprimirTicket(id, productos, pedido, usuario, pesador, impresora, reimprimi
     total_unidades = 0
     productos_str = ""
     dolar = "{:.2f}".format(bcv_valor)
-    sucursal = getattr(settings, 'SUCURSAL', 'LOCAL')
+    sucursal = config.BUSINESS_NAME
     header = f'\x1B@\x1B\x61\x01\x1D\x54\x1C\x70\x01\x33\x1B\x21\x08{sucursal}\x1B!\x01\x1B\x21\x00\x0A\x0D------------------------------------------------\x0A\x0D'
     info = f'{fecha_login_line}\x0A\x0D\x1B\x61\x00{pesador_line}\x0A\x0D\x1B\x61\x00TASA CAMBIO $ = Bs {dolar}\x0A\x0DCLIENTE: {nombre_cliente}\x0A\x0DTelefono: {telefono_cliente}\x0A\x0D------------------------------------------------\x0A\x0D'
     tabla = f'\x1B\x44\x15\x1E\x26\x00\x1B!\x01\x1B\x21\x09       DESCRIPCION          CANTIDAD      PRECIO      SUB-TOTAL\x1B\x21\x01\x0A\x0D'
@@ -2181,7 +2182,16 @@ class Productos(LoginRequiredMixin, ListView):
         # Call the base implementation first to get a context
         context = super().get_context_data(**kwargs)
         # Add in a QuerySet of all the books
-        context["productos_list"] = Producto.objects.all().order_by('nombre')
+        productos = Producto.objects.all().order_by('nombre')
+        
+        # Formatear cantidad con 2 decimales
+        for producto in productos:
+            if producto.cantidad is not None:
+                producto.cantidad_formateada = "{:.2f}".format(float(producto.cantidad))
+            else:
+                producto.cantidad_formateada = None
+        
+        context["productos_list"] = productos
         return context
 
 class ProductoCreateView(LoginRequiredMixin, CreateView):
@@ -2331,7 +2341,7 @@ class CategoriaDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         categoria = CategoriasProductos.objects.get(pk=pk)
         categoria.delete()
-        return redirect('pos:productos')
+        return redirect('pos:categorias')
     
 class CrearUsuarioView(LoginRequiredMixin,CreateView):
     model = User
@@ -2669,9 +2679,17 @@ class BuscarProductoNombreMenu(View):
             productos = Producto.objects.filter().order_by('nombre')
         else:
             if buscar.isnumeric(): productos = Producto.objects.filter(id=buscar).order_by('nombre')
-            else: productos = Producto.objects.filter(nombre__startswith=buscar).order_by('nombre')
+            else: productos = Producto.objects.filter(nombre__icontains=buscar).order_by('nombre')
 
         for producto in productos:
+            # Obtener las categorías del producto
+            categorias_list = []
+            for categoria in producto.categoria.all():
+                categorias_list.append({
+                    'id': categoria.id,
+                    'nombre': categoria.nombre
+                })
+            
             producto_arr = {
                 'id':producto.id,
                 'nombre':producto.nombre,
@@ -2681,6 +2699,7 @@ class BuscarProductoNombreMenu(View):
                 'costo':producto.costo,
                 'precio_detal':producto.precio_detal,
                 'precio_mayor':producto.precio_mayor,
+                'categorias': categorias_list,
             }
             productos_arr.append(producto_arr)
 
@@ -3043,7 +3062,7 @@ class detalle_cliente(View):
 def imprimirTicketAbono(impresora,abono):
 
 
-    sucursal = getattr(settings, 'SUCURSAL', 'LOCAL')
+    sucursal = config.BUSINESS_NAME
     header = f'\x1B@\x1B\x61\x01\x1D\x54\x1C\x70\x01\x33\x1B\x21\x08{sucursal}\x1B!\x01\x1B\x21\x00\x0A\x0D------------------------------------------------\x0A\x0D'
     cliente = f'\x1B\x61\x02\x1B\x21\Cliente: {abono["cliente"]}\x0A\x0D\x0A\x0DRESTANTE: {abono["restante"]}\x1B\x21\x08\x1B\x21\x00\x0A\x0D\x0A\x0D'
     montos = f'\x1B\x61\x02\x1B\x21\x31ABONADO: {abono["monto"]}\x0A\x0D\x0A\x0DRESTANTE: {abono["restante"]}\x1B\x21\x08\x1B\x21\x00\x0A\x0D\x0A\x0D'
@@ -4273,7 +4292,7 @@ def imprimirTicketAbonoDetallado(cliente, abono_total, abonos, deuda_total, deud
         comandos += '\x1D\x21\x00'  # Tamaño normal
         
         # Cabecera
-        sucursal = getattr(settings, 'SUCURSAL', 'LOCAL')
+        sucursal = config.BUSINESS_NAME
         comandos += f'\x1B@\x1B\x61\x01\x1D\x54\x1C\x70\x01\x33\x1B\x21\x08{sucursal}\x1B!\x01\x1B\x21\x00\x0A\x0D'
         comandos += '------------------------------------------------\x0A\x0D'
         

@@ -77,25 +77,27 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para eliminar -->
-<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="modalEliminarLabel">
+<!-- Modal personalizado de confirmación para eliminar -->
+<div id="modalEliminarCustom" class="custom-modal-overlay" style="display: none;">
+    <div class="custom-modal-container">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h5>
                     <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="custom-modal-close" onclick="cerrarModalEliminar()">
+                    <span>&times;</span>
+                </button>
             </div>
-            <div class="modal-body">
+            <div class="custom-modal-body">
                 <p>¿Estás seguro de que deseas eliminar la categoría <strong id="nombreCategoria"></strong>?</p>
-                <div class="alert alert-warning">
+                <div class="custom-modal-warning">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Advertencia:</strong> Esta acción no se puede deshacer y podría afectar los productos asociados a esta categoría.
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <div class="custom-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalEliminar()">
                     <i class="fas fa-times me-1"></i>Cancelar
                 </button>
                 <form id="formEliminar" method="post" style="display: inline;">
@@ -124,23 +126,172 @@
 .btn-group .btn {
     flex: 1;
 }
+
+/* Modal personalizado - Overlay de fondo */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Contenedor del modal */
+.custom-modal-container {
+    position: relative;
+    z-index: 10000;
+    max-width: 500px;
+    width: 90%;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Contenido del modal */
+.custom-modal-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+/* Header del modal */
+.custom-modal-header {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-modal-header h5 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.custom-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s;
+    line-height: 1;
+}
+
+.custom-modal-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Body del modal */
+.custom-modal-body {
+    padding: 24px;
+}
+
+.custom-modal-body p {
+    margin-bottom: 16px;
+    font-size: 1rem;
+    color: #333;
+}
+
+.custom-modal-warning {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: #856404;
+    font-size: 0.9rem;
+}
+
+/* Footer del modal */
+.custom-modal-footer {
+    padding: 16px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.custom-modal-footer button,
+.custom-modal-footer form {
+    margin: 0;
+}
+
+.custom-modal-footer .btn {
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.custom-modal-footer .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
 </style>
 
 <script>
-// Función para confirmar eliminación
+// Función para abrir el modal personalizado
 function confirmarEliminacion(categoriaId, categoriaNombre) {
+    // Actualizar el contenido del modal
     document.getElementById('nombreCategoria').textContent = categoriaNombre;
     document.getElementById('formEliminar').action = 'delete/' + categoriaId;
     
-    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
-    modal.show();
+    // Mostrar el modal
+    const modal = document.getElementById('modalEliminarCustom');
+    modal.style.display = 'flex';
+    
+    // Prevenir scroll del body
+    document.body.style.overflow = 'hidden';
 }
 
-// Event listeners para botones de crear categoría
+// Función para cerrar el modal personalizado
+function cerrarModalEliminar() {
+    const modal = document.getElementById('modalEliminarCustom');
+    modal.style.display = 'none';
+    
+    // Restaurar scroll del body
+    document.body.style.overflow = 'auto';
+}
+
+// Inicialización al cargar el DOM
 document.addEventListener('DOMContentLoaded', function() {
     const crearCategoriaUrl = document.getElementById('crear-categoria-url').textContent;
+    const modal = document.getElementById('modalEliminarCustom');
     
-    // Botón principal
+    // Botón principal para crear categoría
     const botonCrear = document.getElementById('boton-crear-categoria');
     if (botonCrear) {
         botonCrear.addEventListener('click', function() {
@@ -153,6 +304,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (botonCrearEmpty) {
         botonCrearEmpty.addEventListener('click', function() {
             window.location.href = crearCategoriaUrl;
+        });
+    }
+    
+    // Cerrar modal al hacer clic fuera del contenido
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                cerrarModalEliminar();
+            }
+        });
+        
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                cerrarModalEliminar();
+            }
         });
     }
 });

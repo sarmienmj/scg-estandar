@@ -1,3 +1,59 @@
+// Función helper para generar HTML de fila de producto de forma consistente
+function generarFilaProducto(producto) {
+    // Formatear cantidad con 2 decimales exactos
+    let cantidadFormateada = '<span class="text-muted">-</span>';
+    if (producto.cantidad !== null && producto.cantidad !== undefined && producto.cantidad !== '') {
+        cantidadFormateada = parseFloat(producto.cantidad).toFixed(2);
+    }
+    
+    // Generar badges de categorías
+    let categoriasHTML = '';
+    if (producto.categorias && producto.categorias.length > 0) {
+        producto.categorias.forEach(cat => {
+            categoriasHTML += `<span class="badge bg-info me-1">${cat.nombre}</span>`;
+        });
+    } else {
+        categoriasHTML = '<span class="badge bg-light text-dark">Sin categoría</span>';
+    }
+    
+    // Formatear precio con moneda
+    let precioHTML = '';
+    if (producto.moneda === 'USD') {
+        precioHTML = `$${producto.precio_detal} <span class="badge bg-success">USD</span>`;
+    } else {
+        precioHTML = `${producto.precio_detal} Bs. <span class="badge bg-primary">BS</span>`;
+    }
+    
+    return `
+        <tr>
+            <td class="product-id">#${producto.id}</td>
+            <td class="product-name">${producto.nombre}</td>
+            <td class="product-quantity">${cantidadFormateada}</td>
+            <td><span class="badge bg-secondary">${producto.unidad}</span></td>
+            <td class="product-price">
+                ${producto.costo ? '$' + producto.costo : '<span class="text-muted">-</span>'}
+            </td>
+            <td class="product-price">${precioHTML}</td>
+            <td class="product-category">${categoriasHTML}</td>
+            <td class="text-center">
+                <div class="btn-group" role="group">
+                    <a href="edit/${producto.id}" class="btn btn-action btn-edit me-1" title="Modificar producto">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="cantidad/${producto.id}" class="btn btn-action btn-quantity me-1" title="Ajustar cantidad">
+                        <i class="fas fa-plus-minus"></i>
+                    </a>
+                    <form method="post" action="delete/${producto.id}" style="display: inline;" 
+                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?')">
+                        <button type="submit" class="btn btn-action btn-delete" title="Eliminar producto">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>`;
+}
+
 function mueveReloj() {
     momentoActual = new Date()
     hora = momentoActual.getHours()
@@ -199,202 +255,48 @@ $(document).ready(function () {
     })
     $("#buscar-producto-nombre-btn").on('click', function () {
         buscar = $("#buscar-producto-nombre-list").val()
-        if (buscar == '') {
-            $("#tabla-productos-menu").html("")
-            $.ajax({
-                url: "/pos/menu/productos/buscar", type: 'POST', dataType: 'json', data: { buscar: buscar },
-                success: function (response) {
+        $("#tabla-productos-menu").html("")
+        $.ajax({
+            url: "/pos/menu/productos/buscar", type: 'POST', dataType: 'json', data: { buscar: buscar },
+            success: function (response) {
+                if (response.length === 0) {
+                    $("#tabla-productos-menu").append('<tr><td colspan="8" class="text-center text-muted">No se encontraron productos</td></tr>');
+                } else {
                     response.forEach(x => {
-                        row = `
-                        <tr>
-                            <td class="product-id">#${x.id}</td>
-                            <td class="product-name">${x.nombre}</td>
-                            <td class="product-quantity">
-                                ${x.cantidad ? x.cantidad : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td><span class="badge bg-secondary">${x.unidad}</span></td>
-                            <td class="product-price">
-                                ${x.costo ? '$' + x.costo : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td class="product-price">$${x.precio_detal}</td>
-                            <td class="product-price">
-                                ${x.precio_mayor ? '$' + x.precio_mayor : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td class="product-category">
-                                <span class="badge bg-light text-dark">Sin categoría</span>
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="edit/${x.id}" class="btn btn-action btn-edit me-1" title="Modificar producto">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="cantidad/${x.id}" class="btn btn-action btn-quantity me-1" title="Ajustar cantidad">
-                                        <i class="fas fa-plus-minus"></i>
-                                    </a>
-                                    <form method="post" action="delete/${x.id}" style="display: inline;" 
-                                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?')">
-                                        <button type="submit" class="btn btn-action btn-delete" title="Eliminar producto">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                </form>
-                                </div>
-                            </td>
-                        </tr>`
-                        $("#tabla-productos-menu").append(row)
+                        $("#tabla-productos-menu").append(generarFilaProducto(x))
                     })
                 }
-            })
-        } else {
-            $("#tabla-productos-menu").html("")
-            $.ajax({
-                url: "/pos/menu/productos/buscar", type: 'POST', dataType: 'json', data: { buscar: buscar },
-                success: function (response) {
-                    response.forEach(x => {
-                        row = `
-                        <tr>
-                            <td class="product-id">#${x.id}</td>
-                            <td class="product-name">${x.nombre}</td>
-                            <td class="product-quantity">
-                                ${x.cantidad ? x.cantidad : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td><span class="badge bg-secondary">${x.unidad}</span></td>
-                            <td class="product-price">
-                                ${x.costo ? '$' + x.costo : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td class="product-price">$${x.precio_detal}</td>
-                            <td class="product-price">
-                                ${x.precio_mayor ? '$' + x.precio_mayor : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td class="product-category">
-                                <span class="badge bg-light text-dark">Sin categoría</span>
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="edit/${x.id}" class="btn btn-action btn-edit me-1" title="Modificar producto">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="cantidad/${x.id}" class="btn btn-action btn-quantity me-1" title="Ajustar cantidad">
-                                        <i class="fas fa-plus-minus"></i>
-                                    </a>
-                                    <form method="post" action="delete/${x.id}" style="display: inline;" 
-                                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?')">
-                                        <button type="submit" class="btn btn-action btn-delete" title="Eliminar producto">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                </form>
-                                </div>
-                            </td>
-                        </tr>`
-                        $("#tabla-productos-menu").append(row)
-                    })
-                }
-            })
-        }
+            }
+        })
     })
     $("#buscar-producto-id-btn").on('click', function () {
         let buscar = $("#buscar-producto-id-list").val().trim();
         $("#tabla-productos-menu").html("");
-        if (buscar === '') {
-            $.ajax({
-                url: "/pos/menu/productos/buscar", type: 'POST', dataType: 'json', data: { buscar: '' },
-                success: function (response) {
-                    response.forEach(x => {
-                        row = `
-                        <tr>
-                            <td class="product-id">#${x.id}</td>
-                            <td class="product-name">${x.nombre}</td>
-                            <td class="product-quantity">
-                                ${x.cantidad ? x.cantidad : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td><span class="badge bg-secondary">${x.unidad}</span></td>
-                            <td class="product-price">
-                                ${x.costo ? '$' + x.costo : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td class="product-price">$${x.precio_detal}</td>
-                            <td class="product-price">
-                                ${x.precio_mayor ? '$' + x.precio_mayor : '<span class="text-muted">-</span>'}
-                            </td>
-                            <td class="product-category">
-                                <span class="badge bg-light text-dark">Sin categoría</span>
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="edit/${x.id}" class="btn btn-action btn-edit me-1" title="Modificar producto">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="cantidad/${x.id}" class="btn btn-action btn-quantity me-1" title="Ajustar cantidad">
-                                        <i class="fas fa-plus-minus"></i>
-                                    </a>
-                                    <form method="post" action="delete/${x.id}" style="display: inline;" 
-                                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?')">
-                                        <button type="submit" class="btn btn-action btn-delete" title="Eliminar producto">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                </form>
-                                </div>
-                            </td>
-                        </tr>`
-                        $("#tabla-productos-menu").append(row)
-                    })
-                }
-            })
-        } else {
-            // Buscar por ID o barcode
-            $.ajax({
-                url: "/pos/menu/productos/buscar", type: 'POST', dataType: 'json', data: { buscar: buscar },
-                success: function (response) {
-                    // Filtrar por barcode si no es numérico
-                    let resultados = response;
+        
+        $.ajax({
+            url: "/pos/menu/productos/buscar", type: 'POST', dataType: 'json', data: { buscar: buscar },
+            success: function (response) {
+                let resultados = response;
+                
+                // Si hay búsqueda específica, filtrar por ID o barcode
+                if (buscar !== '') {
                     if (!/^[0-9]+$/.test(buscar)) {
+                        // Buscar por barcode
                         resultados = response.filter(x => x.barcode && x.barcode.toLowerCase() === buscar.toLowerCase());
                     } else {
-                        // Si es numérico, mostrar todos los que coincidan por ID o barcode
+                        // Buscar por ID o barcode numérico
                         resultados = response.filter(x => x.id == buscar || (x.barcode && x.barcode == buscar));
                     }
-                    if (resultados.length === 0) {
-                        $("#tabla-productos-menu").append('<tr><td colspan="9" class="text-center text-muted">No se encontraron productos</td></tr>');
-                    } else {
-                        resultados.forEach(x => {
-                        row = `
-                        <tr>
-                                <td class="product-id">#${x.id}</td>
-                                <td class="product-name">${x.nombre}</td>
-                                <td class="product-quantity">
-                                    ${x.cantidad ? x.cantidad : '<span class="text-muted">-</span>'}
-                                </td>
-                                <td><span class="badge bg-secondary">${x.unidad}</span></td>
-                                <td class="product-price">
-                                    ${x.costo ? '$' + x.costo : '<span class="text-muted">-</span>'}
-                                </td>
-                                <td class="product-price">$${x.precio_detal}</td>
-                                <td class="product-price">
-                                    ${x.precio_mayor ? '$' + x.precio_mayor : '<span class="text-muted">-</span>'}
-                                </td>
-                                <td class="product-category">
-                                    <span class="badge bg-light text-dark">Sin categoría</span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        <a href="edit/${x.id}" class="btn btn-action btn-edit me-1" title="Modificar producto">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="cantidad/${x.id}" class="btn btn-action btn-quantity me-1" title="Ajustar cantidad">
-                                            <i class="fas fa-plus-minus"></i>
-                                        </a>
-                                        <form method="post" action="delete/${x.id}" style="display: inline;" 
-                                              onsubmit="return confirm('¿Estás seguro de que quieres eliminar este producto?')">
-                                            <button type="submit" class="btn btn-action btn-delete" title="Eliminar producto">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                </form>
-                                    </div>
-                            </td>
-                        </tr>`
-                        $("#tabla-productos-menu").append(row)
-                    })
-                    }
                 }
-            })
-        }
+                
+                if (resultados.length === 0) {
+                    $("#tabla-productos-menu").append('<tr><td colspan="8" class="text-center text-muted">No se encontraron productos</td></tr>');
+                } else {
+                    resultados.forEach(x => {
+                        $("#tabla-productos-menu").append(generarFilaProducto(x))
+                    })
+                }
+            }
+        })
     });
 })
