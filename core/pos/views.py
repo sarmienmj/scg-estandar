@@ -1030,17 +1030,9 @@ class PagarPedido(View):
             
         pedido.pagado_fecha = timezone.now()
         pedido.save()
-        
-        # 🧹 LIMPIEZA MULTI-PESADOR: Eliminar pedido activo si existe
-        try:
-            if pedido.pesador:  # Si el pedido tiene pesador asignado
-                from .models import PedidoActivo
-                deleted_count, _ = PedidoActivo.objects.filter(username_pesador=pedido.pesador).delete()
-                if deleted_count > 0:
-                    print(f"✅ Pedido activo eliminado para pesador: {pedido.pesador}")
-        except Exception as e:
-            print(f"⚠️ Error eliminando pedido activo: {str(e)}")
-            # No fallar el pago por este error
+
+        # ✅ NOTA: No eliminar pedido activo al pagar - se mantiene para que el pesador pueda continuar trabajando
+        # El pedido activo se elimina solo cuando se guarda un nuevo pedido o se elimina manualmente
 
         # Actualizar el dinero esperado en caja DESPUÉS de marcar el pedido como pagado
         try:
@@ -5492,17 +5484,9 @@ class PagarPedidoRapido(View):
                 
             pedido.pagado_fecha = timezone.now()
             pedido.save()
-            
-            # 🧹 LIMPIEZA MULTI-PESADOR: Eliminar pedido activo si existe
-            try:
-                if pedido.pesador:  # Si el pedido tiene pesador asignado
-                    from .models import PedidoActivo
-                    deleted_count, _ = PedidoActivo.objects.filter(username_pesador=pedido.pesador).delete()
-                    if deleted_count > 0:
-                        print(f"✅ Pedido activo eliminado para pesador: {pedido.pesador}")
-            except Exception as e:
-                print(f"⚠️ Error eliminando pedido activo: {str(e)}")
-                # No fallar el pago por este error
+
+            # ✅ NOTA: No eliminar pedido activo al pagar - se mantiene para que el pesador pueda continuar trabajando
+            # El pedido activo se elimina solo cuando se guarda un nuevo pedido o se elimina manualmente
 
             # 💰 ACTUALIZAR DINERO ESPERADO EN CAJA (ya validada arriba)
             dinero_esperado = caja_actual.dineroEsperado or {

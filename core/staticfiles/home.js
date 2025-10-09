@@ -2,7 +2,8 @@ var url1 = $("#url-pos").text();
 var url2 = $("#url-menu").text();
 var url3 = $("#url-creditos").text();
 var url4 = $("#url-prepesados").text();
-var url5 = $("#url-configuracion").text();
+var url5 = $("#url-inventario").text();
+var url6 = $("#url-configuracion").text();
 var urlLogout = $("#url-logout").text();
 console.log(url3)
 $("#home-pos-boton").on('click', function () {
@@ -20,9 +21,14 @@ $("#home-prepesados-boton").on('click', function () {
     location.assign(url4);
 });
 
+// Nuevo: botón INVENTARIO
+$("#home-inventario-boton").on('click', function () {
+    location.assign(url5);
+});
+
 // Nuevo: botón CONFIGURACIÓN
 $("#home-configuracion-boton").on('click', function () {
-    location.assign(url5);
+    location.assign(url6);
 });
 
 // Manejador para el botón de cerrar sesión
