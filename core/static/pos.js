@@ -2984,10 +2984,26 @@ function getModoBalanza() {
           if (response.success && response.saved) {
             // 🎯 PEDIDO GUARDADO EXITOSAMENTE: Proceder con la lógica de redirección
             if (response.is_pesador) {
+              // 🧹 LIMPIEZA MULTI-PESADOR: Limpiar pedido local antes de redirigir
+              console.log('🧹 Limpiando pedido local después de guardar...');
+              limpiarPedidoActual();
+              pedido_cargado_modificado = false;
+
+              // 🔒 PREVENIR AUTO-GUARDADO: Cancelar cualquier auto-guardado pendiente
+              if (autoGuardadoTimeout) {
+                clearTimeout(autoGuardadoTimeout);
+                autoGuardadoTimeout = null;
+                console.log('⏹️ Auto-guardado pendiente cancelado');
+              }
+
+              // 📝 MARCAR EN SESSIONSTORAGE: Indicar que acabamos de guardar un pedido
+              sessionStorage.setItem('acabaDeGuardarPedido', 'true');
+              console.log('📝 Marcado en sessionStorage que acabamos de guardar un pedido');
+
               // 🎯 PESADOR: Mostrar notificación de impresión y redirigir a POS
               if (response.impresion_async) {
                 mostrarMensajeImpresionAsyncCentrado(response.pedido_id, response.mensaje);
-                
+
                 // Redirigir después de 2 segundos para ver la notificación
                 setTimeout(function() {
                   window.location.href = response.url;
@@ -4136,28 +4152,35 @@ function autoGuardarPedidoActivoDebounced(delay = 1000) {
 // Cargar pedido inicial considerando conflictos URL vs pesador activo
 async function cargarPedidoInicialSiCorresponde() {
     try {
+        // 🔒 VERIFICACIÓN ESPECIAL: Si acabamos de guardar un pedido, no cargar pedido activo
+        if (sessionStorage.getItem('acabaDeGuardarPedido')) {
+            console.log('🔒 Recarga después de guardar pedido - no cargar pedido activo automáticamente');
+            sessionStorage.removeItem('acabaDeGuardarPedido'); // Limpiar la marca
+            return;
+        }
+
         // Verificar si estamos en una URL con pedido específico
         const urlActual = window.location.pathname;
         const matchPedido = urlActual.match(/\/pos\/(\d+)\//);
-        
+
         if (matchPedido) {
             const pedidoId = matchPedido[1];
             console.log(`🔍 URL con pedido específico detectada: ${pedidoId}`);
-            
-            // Si hay productos en el pedido actual (cargados desde la URL), 
+
+            // Si hay productos en el pedido actual (cargados desde la URL),
             // priorizar el pedido de la URL (comportamiento automático)
             if (pedido.length > 0) {
                 console.log('ℹ️ Pedido desde URL detectado - manteniendo pedido actual, no cargando pedido activo');
                 return;
             }
         }
-        
+
         // Intentar cargar pedido activo del pesador
         if (pesadorActualSeleccionado) {
             console.log('📥 Intentando cargar pedido activo al iniciar...');
             await cargarPedidoActivoBackend(pesadorActualSeleccionado.username);
         }
-        
+
     } catch (error) {
         console.error('❌ Error cargando pedido inicial:', error);
         // No mostrar error al usuario, solo log para debugging

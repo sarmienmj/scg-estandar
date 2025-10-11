@@ -2827,7 +2827,7 @@ class ConexionBalanza(View):
                 respuesta_str = str(respuesta_limpia[1]) + str(respuesta_limpia[2])+ "." + str(respuesta_limpia[3]) + str(respuesta_limpia[4]) + str(respuesta_limpia[5])
             else:
                 # Formato alternativo: 00102 -> 001.02
-                respuesta_str = str(respuesta_limpia[0]) + str(respuesta_limpia[1])+ "." + str(respuesta_limpia[2]) + str(respuesta_limpia[3]) + str(respuesta_limpia[4])
+                respuesta_str = str(respuesta_limpia[0]) + str(respuesta_limpia[1]) + str(respuesta_limpia[2]) + "." + str(respuesta_limpia[3]) + str(respuesta_limpia[4])
             
             respuesta_float = float(respuesta_str)
             
@@ -2886,12 +2886,12 @@ class ConexionBalanzaAsync(View):
         # Procesar datos de peso
         try:
             if len(respuesta_limpia) >= 6:
-                peso_str = f"{respuesta_limpia[1]}{respuesta_limpia[2]}{respuesta_limpia[3]}.{respuesta_limpia[4]}{respuesta_limpia[5]}"
+                peso_str = f"{respuesta_limpia[0]}{respuesta_limpia[1]}.{respuesta_limpia[2]}{respuesta_limpia[3]}{respuesta_limpia[4]}{respuesta_limpia[5]}"
             else:
-                peso_str = f"{respuesta_limpia[0]}{respuesta_limpia[1]}{respuesta_limpia[2]}.{respuesta_limpia[3]}{respuesta_limpia[4]}"
+                peso_str = f"{respuesta_limpia[0]}{respuesta_limpia[1]}.{respuesta_limpia[2]}{respuesta_limpia[3]}{respuesta_limpia[4]}"
             
             peso_float = float(peso_str)
-            
+            print(f"Peso: {peso_float}")
             # Validar rango de peso
             if 0 <= peso_float <= 50.0:
                 print(f"✅ Peso válido: {peso_float}kg")
